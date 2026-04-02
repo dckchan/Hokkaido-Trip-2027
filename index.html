@@ -56,10 +56,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Ar
 .stat{background:var(--c);border-radius:var(--r);padding:12px 8px;text-align:center;border:1px solid rgba(0,0,0,.05)}
 .stat .v{font-size:20px;font-weight:800;color:var(--p)}.stat .l{font-size:11px;color:var(--t2);margin-top:2px}
 /* ─── SCROLLABLE RECOMMENDATIONS ─── */
-.rec-sec{margin-bottom:14px}.rec-sec h2{font-size:14px;margin-bottom:6px;color:var(--p);font-weight:700}
-.rec-row{display:flex;gap:10px;overflow-x:auto;padding:4px 0 10px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scrollbar-width:none}
+.rec-sec{margin-bottom:14px;position:relative}.rec-sec h2{font-size:14px;margin-bottom:6px;color:var(--p);font-weight:700}
+.rec-row{display:flex;gap:10px;overflow-x:auto;padding:4px 0 10px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scrollbar-width:none;scroll-behavior:smooth}
 .rec-row::-webkit-scrollbar{display:none}
 .rec-c{flex:0 0 220px;scroll-snap-align:start;background:var(--c);border-radius:var(--r);border:1px solid rgba(0,0,0,.06);overflow:hidden;cursor:pointer;transition:.15s}
+/* ─── SCROLL ARROWS ─── */
+.scroll-wrap{position:relative}
+.scroll-arr{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.95);border:1px solid #ddd;box-shadow:0 2px 8px rgba(0,0,0,.12);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--p);z-index:10;transition:.15s}
+.scroll-arr:hover{background:var(--p);color:#fff;border-color:var(--p)}
+.scroll-arr:active{transform:translateY(-50%) scale(.92)}
+.scroll-arr.arr-l{left:-4px}
+.scroll-arr.arr-r{right:-4px}
+/* ─── HORIZONTAL TIPS ─── */
+.tips-h{display:flex;gap:10px;overflow-x:auto;padding:4px 0 10px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scrollbar-width:none;scroll-behavior:smooth}
+.tips-h::-webkit-scrollbar{display:none}
+.tips-h .tip{flex:0 0 260px;scroll-snap-align:start;margin-bottom:0}
 .rec-c:hover,.rec-c:active{box-shadow:0 4px 12px rgba(0,0,0,.1);border-color:var(--p);transform:translateY(-2px)}
 .rec-top{height:4px}
 .rec-top.t-din{background:linear-gradient(90deg,#e67e22,#f39c12)}
@@ -199,6 +210,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Ar
   .pk-days{flex-wrap:nowrap;overflow-x:auto}
   .ov-nav{top:82px;margin:0 -8px;padding-left:8px;padding-right:8px}
   .ov-btn{padding:6px 10px;font-size:11px;min-height:30px}
+  .scroll-arr{width:28px;height:28px;font-size:12px}
+  .tips-h .tip{flex:0 0 230px}
 }
 @media(max-width:380px){
   .cfg-grid{grid-template-columns:1fr}
@@ -287,25 +300,25 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
     <button class="ov-btn" onclick="scrollToSec('secSenior')">👴 Senior Guide</button>
     <button class="ov-btn" onclick="scrollToSec('secRoute')">🗾 Route</button>
   </div>
-  <div id="secRec" class="rec-sec"><h2>🍽️ Recommended Dining</h2><div class="rec-row" id="recD"></div></div>
-  <div id="secPoi" class="rec-sec"><h2>📍 Top Points of Interest</h2><div class="rec-row" id="recP"></div></div>
-  <div id="secAct" class="rec-sec"><h2>🎯 Best Activities</h2><div class="rec-row" id="recA"></div></div>
+  <div id="secRec" class="rec-sec"><h2>🍽️ Recommended Dining</h2><div class="scroll-wrap"><button class="scroll-arr arr-l" onclick="scrollRow('recD',-1)">◀</button><div class="rec-row" id="recD"></div><button class="scroll-arr arr-r" onclick="scrollRow('recD',1)">▶</button></div></div>
+  <div id="secPoi" class="rec-sec"><h2>📍 Top Points of Interest</h2><div class="scroll-wrap"><button class="scroll-arr arr-l" onclick="scrollRow('recP',-1)">◀</button><div class="rec-row" id="recP"></div><button class="scroll-arr arr-r" onclick="scrollRow('recP',1)">▶</button></div></div>
+  <div id="secAct" class="rec-sec"><h2>🎯 Best Activities</h2><div class="scroll-wrap"><button class="scroll-arr arr-l" onclick="scrollRow('recA',-1)">◀</button><div class="rec-row" id="recA"></div><button class="scroll-arr arr-r" onclick="scrollRow('recA',1)">▶</button></div></div>
   <div id="secFood" class="card">
     <h2>🍱 Hokkaido Food Guide — Japan's Food Basket</h2>
     <p style="color:var(--t2);font-size:12px;margin-bottom:10px">Hokkaido is widely regarded as Japan's food basket — surrounded by cold northern seas producing the sweetest seafood, and producing over half of Japan's milk. Use the <b>🌟 Picks</b> tab to add these to your itinerary. Items tagged <span class="badge b-grn" style="font-size:10px">Food Guide</span> are sourced from culinary research.</p>
-    <div class="tips">
+    <div class="scroll-wrap"><button class="scroll-arr arr-l" onclick="scrollRow('foodTips',-1)">◀</button><div class="tips-h" id="foodTips">
       <div class="tip" style="border-left-color:#e67e22"><h4>🦀 Fresh Seafood</h4><p><b>Kaisendon</b> (seafood bowls) with uni, ikura, scallops & crab. Try <b>hairy crab</b> (kegani) for sweet meat and rich roe. Conveyor belt sushi in Hokkaido is world-class — look for <b>hakaku</b> (octagonal fish). Don't miss <b>ichiya-boshi</b> grilled hokke (overnight-dried mackerel).</p></div>
       <div class="tip" style="border-left-color:#e74c3c"><h4>🍜 Regional Ramen</h4><p><b>Miso ramen</b> — Sapporo classic, rich & slightly sweet. <b>Shio (salt) ginger ramen</b> — lighter, warming. <b>Ebisoba</b> — shrimp broth at Chitose Airport. <b>Chicken Pyon</b> — modern creamy chicken with rosemary foam.</p></div>
       <div class="tip" style="border-left-color:#27ae60"><h4>🍖 Signature Dishes</h4><p><b>Genghis Khan (Jingisukan)</b> — cook lamb on a helmet-shaped grill. <b>Soup Curry</b> — Sapporo original with 'Milk Style' variant using Hokkaido milk. <b>Chikuwapan</b> — bread roll with fish cake & tuna mayo, only in Hokkaido!</p></div>
       <div class="tip" style="border-left-color:#8854ad"><h4>🍦 Dairy & Sweets</h4><p>Hokkaido produces over <b>half of Japan's milk</b>. Try <b>Shiroi Koibito</b> cookies, <b>crab cream croquettes</b> made with local milk, <b>Hangansama</b> rice cakes (Hokkaido Shrine exclusive), and campus ice cream at <b>Hokkaido University</b>.</p></div>
       <div class="tip" style="border-left-color:#d63384"><h4>🎌 Unique Delicacies</h4><p><b>Tachikama</b> sashimi — bouncy cod milt kamaboko (Oct-Feb winter delicacy). <b>Seicomart Hot Chef</b> — local convenience store with freshly made fried chicken loved by all Hokkaido locals.</p></div>
       <div class="tip" style="border-left-color:#2980b9"><h4>📍 Where to Eat by Area</h4><p><b>Sapporo:</b> Nijo Market, Susukino, Ramen Republic. <b>Furano:</b> Farm cafes, cheese factory. <b>Hakodate:</b> Morning Market (open 5AM!), Lucky Pierrot. <b>Everywhere:</b> Seicomart stores along driving routes.</p></div>
-    </div>
+    </div><button class="scroll-arr arr-r" onclick="scrollRow('foodTips',1)">▶</button></div>
   </div>
   <div id="secSenior" class="card">
     <h2>👴 Senior-Friendly Travel Guide — 3 Adults + 2 Seniors</h2>
     <p style="color:var(--t2);font-size:12px;margin-bottom:10px">This itinerary is designed for a family group of 5 with 2 senior travelers. Every recommendation considers accessibility, pacing, and comfort.</p>
-    <div class="tips">
+    <div class="scroll-wrap"><button class="scroll-arr arr-l" onclick="scrollRow('seniorTips',-1)">◀</button><div class="tips-h" id="seniorTips">
       <div class="tip"><h4>🚗 Driving & Vehicle</h4><p>7-seater minivan (Toyota Alphard/HiAce) recommended for 5 pax + luggage. Max ~3 hrs per driving leg. Frequent stops at 道の駅 (roadside stations). Hokkaido roads are wide and well-maintained. Adults can rotate driving duties.</p></div>
       <div class="tip"><h4>♨️ Onsen & Ryokan</h4><p>3 onsen ryokan stays included — therapeutic for joints and fatigue. Check water temperature first (40-42°C ideal for seniors). Use handrails at all times. Private baths (貸切風呂) available at most ryokans for family use. Book twin rooms for seniors.</p></div>
       <div class="tip"><h4>♿ Accessibility</h4><p>Farm Tomita & Shiroi Koibito Park are flat terrain. Ropeways at Mt Moiwa & Hakodate eliminate climbing. Morning markets have seated restaurants. Most airports and JR stations have elevators. Request wheelchair assistance at airports if needed.</p></div>
@@ -314,7 +327,7 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
       <div class="tip" id="tipWeather"><h4>🧳 Packing & Weather</h4><p>Loading weather info based on your departure date...</p></div>
       <div class="tip"><h4>💊 Health & Emergency</h4><p>Japan's hospitals are excellent. Carry travel insurance docs for all 5 travelers. Save hotel phone numbers. <b>Emergency: 119</b> (ambulance). Most Hokkaido hospitals have basic English. Bring a printed list of any medications and allergies in Japanese (ask hotel to help translate).</p></div>
       <div class="tip"><h4>💰 Budget (5 Pax)</h4><p>Meals: ~¥15,000-20,000/day for 5. Accommodation: ~¥50,000-80,000/night (2-3 rooms). Rental car: ~¥10,000/day (7-seater). Tolls: ~¥3,000-5,000/day. Activities: ~¥5,000-10,000/day total. Senior discounts available at many attractions (65+).</p></div>
-    </div>
+    </div><button class="scroll-arr arr-r" onclick="scrollRow('seniorTips',1)">▶</button></div>
   </div>
   <div id="secRoute" class="card">
     <h2>🗾 Route Overview</h2>
@@ -475,6 +488,13 @@ function applyCfg(){
 function scrollToSec(id){
   const el=document.getElementById(id);
   if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function scrollRow(id,dir){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const cardWidth=el.querySelector('.rec-c,.tip')?.offsetWidth||240;
+  el.scrollBy({left:dir*(cardWidth+10)*2,behavior:'smooth'});
 }
 
 function updateWeatherTip(){
