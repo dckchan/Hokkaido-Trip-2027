@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>🍁 Hokkaido Family Driving Trip Planner 2027</title>
-<meta name="description" content="Interactive Hokkaido family driving trip planner with itinerary, map, dining picks, and elderly-friendly recommendations.">
+<title>🍁 Hokkaido Family Trip 2027 — 5 Travelers</title>
+<meta name="description" content="Hokkaido family driving trip planner 2027 for 5 travelers (3 adults, 2 seniors) with senior-friendly itinerary, map, dining picks, and accessibility info.">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -209,11 +209,11 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
 </head>
 <body>
 
-<div class="credit">Produced by D. Chan</div>
+<div class="credit">Hokkaido 2027 · 5 Travelers · Produced by D. Chan</div>
 <noscript><div style="padding:40px 20px;text-align:center;font-size:16px;color:#b5451b"><b>JavaScript is required</b><br>Please enable JavaScript to use the Hokkaido Trip Planner.</div></noscript>
 
 <nav class="nav" role="navigation" aria-label="Main navigation">
-  <h1>🍁 <span>Hokkaido</span> Trip 2027</h1>
+  <h1>🍁 <span>Hokkaido</span> Trip 2027 · 5 Pax</h1>
   <div class="tabs" id="navTabs" role="tablist">
     <button class="tab on" data-p="overview" role="tab" aria-selected="true">📋 Overview</button>
     <button class="tab" data-p="itinerary" role="tab" aria-selected="false">📅 Itinerary</button>
@@ -247,8 +247,24 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
     </div>
   </div>
   <div class="flight" id="flightBox"></div>
+  <div class="card" style="background:linear-gradient(135deg,#f0f7ff,#e8f4f8);border:2px solid #b8d4f0">
+    <h2 style="color:var(--hd);margin-bottom:8px">👨‍👩‍👦 Travelers — Family Group with Seniors</h2>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <div style="background:var(--hd);color:#fff;padding:10px 18px;border-radius:10px;text-align:center"><div style="font-size:24px;font-weight:800">5</div><div style="font-size:10px;opacity:.8">Total Pax</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;flex:1">
+        <div style="background:#fff;padding:8px 14px;border-radius:8px;border:1px solid #ddd;flex:1;min-width:120px"><div style="font-size:18px;font-weight:800;color:var(--p)">3</div><div style="font-size:11px;color:var(--t2)">👩 Adults</div></div>
+        <div style="background:#fff;padding:8px 14px;border-radius:8px;border:1px solid #ddd;flex:1;min-width:120px"><div style="font-size:18px;font-weight:800;color:var(--bl)">2</div><div style="font-size:11px;color:var(--t2)">👴 Seniors</div></div>
+      </div>
+    </div>
+    <div style="margin-top:8px;padding:8px 10px;background:rgba(41,128,185,.06);border-radius:6px;font-size:11px;color:var(--t2)">
+      <b>🚗 Vehicle:</b> 7-seater minivan recommended (Toyota Alphard or similar) for comfort with luggage · 
+      <b>🏨 Rooms:</b> Book 2–3 rooms per night (twin rooms at ryokans preferred) ·
+      <b>♿ Note:</b> Itinerary paced for seniors — rest days built in, ropeways over hiking, seated dining prioritized
+    </div>
+  </div>
   <div class="stats">
     <div class="stat"><div class="v" id="stDays">10</div><div class="l">Days</div></div>
+    <div class="stat"><div class="v">5</div><div class="l">Travelers</div></div>
     <div class="stat"><div class="v" id="stAcc">6</div><div class="l">Stays</div></div>
     <div class="stat"><div class="v" id="stPOI">12</div><div class="l">POI</div></div>
     <div class="stat"><div class="v" id="stDin">10</div><div class="l">Dining</div></div>
@@ -271,14 +287,17 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
     </div>
   </div>
   <div class="card">
-    <h2>👴 Elderly-Friendly Driving Trip Tips</h2>
+    <h2>👴 Senior-Friendly Travel Guide — 3 Adults + 2 Seniors</h2>
+    <p style="color:var(--t2);font-size:12px;margin-bottom:10px">This itinerary is designed for a family group of 5 with 2 senior travelers. Every recommendation considers accessibility, pacing, and comfort.</p>
     <div class="tips">
-      <div class="tip"><h4>🚗 Driving</h4><p>Max ~3 hrs per leg. Stop at 道の駅 (roadside stations). Hokkaido roads are wide and well-maintained.</p></div>
-      <div class="tip"><h4>♨️ Onsen</h4><p>3 onsen ryokan stays included. Therapeutic for joints. Check water temp first. Use handrails.</p></div>
-      <div class="tip"><h4>🥾 Accessibility</h4><p>Farm Tomita & Shiroi Koibito Park are flat. Ropeways at Mt Moiwa & Hakodate eliminate climbing.</p></div>
-      <div class="tip"><h4>🍽️ Dining</h4><p>Ryokans include dinner & breakfast. Markets have seated dining. Seicomart Hot Chef stores along driving routes for easy hot meals. Avoid late dinner times for elderly.</p></div>
-      <div class="tip"><h4>⏰ Pacing</h4><p>Built-in rest day at Lake Toya. Limit to 2-3 activities per day. Start mornings at 9-10 AM.</p></div>
-      <div class="tip"><h4>🧳 October Weather</h4><p>8-18°C. Pack layers. Comfortable walking shoes essential. Pharmacies (ドラッグストア) everywhere.</p></div>
+      <div class="tip"><h4>🚗 Driving & Vehicle</h4><p>7-seater minivan (Toyota Alphard/HiAce) recommended for 5 pax + luggage. Max ~3 hrs per driving leg. Frequent stops at 道の駅 (roadside stations). Hokkaido roads are wide and well-maintained. Adults can rotate driving duties.</p></div>
+      <div class="tip"><h4>♨️ Onsen & Ryokan</h4><p>3 onsen ryokan stays included — therapeutic for joints and fatigue. Check water temperature first (40-42°C ideal for seniors). Use handrails at all times. Private baths (貸切風呂) available at most ryokans for family use. Book twin rooms for seniors.</p></div>
+      <div class="tip"><h4>♿ Accessibility</h4><p>Farm Tomita & Shiroi Koibito Park are flat terrain. Ropeways at Mt Moiwa & Hakodate eliminate climbing. Morning markets have seated restaurants. Most airports and JR stations have elevators. Request wheelchair assistance at airports if needed.</p></div>
+      <div class="tip"><h4>🍽️ Dining for 5</h4><p>Ryokans include dinner & breakfast for all guests. Reserve tables for 5 at popular restaurants. Markets have seated dining halls. Seicomart Hot Chef along driving routes for easy group meals. Avoid late dinner times (before 7 PM ideal for seniors).</p></div>
+      <div class="tip"><h4>⏰ Pacing & Rest</h4><p>Built-in rest day at Lake Toya — critical for senior recovery. Limit to 2-3 activities per day. Start mornings at 9-10 AM (not too early). Adults can split up for harder activities while seniors rest at hotel/cafe. Afternoon rest breaks (1-3 PM) recommended.</p></div>
+      <div class="tip"><h4>🧳 Packing & Weather</h4><p>October in Hokkaido: 8-18°C. Pack layers for everyone. Comfortable walking shoes essential (no heels). Bring walking stick/cane if needed. Pharmacies (ドラッグストア) everywhere for medication. Carry seniors' prescriptions in English + Japanese.</p></div>
+      <div class="tip"><h4>💊 Health & Emergency</h4><p>Japan's hospitals are excellent. Carry travel insurance docs for all 5 travelers. Save hotel phone numbers. <b>Emergency: 119</b> (ambulance). Most Hokkaido hospitals have basic English. Bring a printed list of any medications and allergies in Japanese (ask hotel to help translate).</p></div>
+      <div class="tip"><h4>💰 Budget (5 Pax)</h4><p>Meals: ~¥15,000-20,000/day for 5. Accommodation: ~¥50,000-80,000/night (2-3 rooms). Rental car: ~¥10,000/day (7-seater). Tolls: ~¥3,000-5,000/day. Activities: ~¥5,000-10,000/day total. Senior discounts available at many attractions (65+).</p></div>
     </div>
   </div>
   <div class="card">
@@ -331,7 +350,7 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
 <div class="pn" id="pn-picks">
   <div class="card">
     <h2>🌟 Critic's Picks — Hokkaido Best</h2>
-    <p style="color:var(--t2);font-size:12px;margin-bottom:10px">Select a category, then choose a day to see 10 curated picks. Click <b>+ Add</b> to insert into itinerary. Items tagged <span class="c-tag fg" style="font-size:10px">Food Guide</span> are from culinary research.</p>
+    <p style="color:var(--t2);font-size:12px;margin-bottom:10px">Curated for a family group of 5 (3 adults + 2 seniors). Select a category, then choose a day to see 10 picks. Items marked <span class="badge b-grn" style="font-size:10px">Senior✓</span> are accessibility-friendly. Click <b>+ Add</b> to insert into itinerary.</p>
     <!-- Category Tabs -->
     <div class="pk-tabs" id="pkTabs">
       <button class="pk-tab on" data-cat="dining" onclick="selectPickCat('dining')">🍽️ Dining</button>
@@ -722,7 +741,7 @@ function renderFlight(){
     <div class="fl-seg"><h3>🛬 Arrival</h3><div class="fl-city">Tokyo Haneda (HND)</div><div class="fl-det">📅 ${fmt(arr)} — 7:00 PM JST · T3</div></div>
     <div class="fl-arrow">✈→</div>
     <div class="fl-seg"><h3>🔙 Return</h3><div class="fl-city">Hakodate → HND → ${tripFrom}</div><div class="fl-det">📅 ${fmt(end)}</div></div>
-    <div class="fl-dates"><div class="lbl">Duration</div><div class="val">${fmtS(arr)} – ${fmtS(end)}</div><div class="lbl" style="margin-top:3px">Total</div><div class="val">${tripDays} Days / ${tripDays-1} Nights</div></div>`;
+    <div class="fl-dates"><div class="lbl">Travelers</div><div class="val">5 Pax (3👩 + 2👴)</div><div class="lbl" style="margin-top:3px">Duration</div><div class="val">${tripDays} Days / ${tripDays-1} Nights</div></div>`;
 }
 
 /* ════════════════════════════════════════
@@ -748,7 +767,7 @@ function renderRecs(){
   function cards(items,topClass){
     return items.map(x=>{
       const gl=gmapLink(x);
-      return`<div class="rec-c" onclick="goToDay(${x._di})"><div class="rec-top ${topClass}"></div><div class="rec-bd"><h4>${x.name}</h4><p>${(x.desc||'').replace('⭐','').trim()}</p>${x.time?`<p>⏰ ${x.time}</p>`:''}<span class="tag-s tag-star">⭐</span>${x.elderly==='yes'?'<span class="tag-s tag-eld">Elderly✓</span>':''}<div class="rec-day">Day ${x.day}</div>${gl?`<a class="gm-link" href="${gl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">📍 Maps</a>`:''}</div></div>`;
+      return`<div class="rec-c" onclick="goToDay(${x._di})"><div class="rec-top ${topClass}"></div><div class="rec-bd"><h4>${x.name}</h4><p>${(x.desc||'').replace('⭐','').trim()}</p>${x.time?`<p>⏰ ${x.time}</p>`:''}<span class="tag-s tag-star">⭐</span>${x.elderly==='yes'?'<span class="tag-s tag-eld">Senior✓</span>':''}<div class="rec-day">Day ${x.day}</div>${gl?`<a class="gm-link" href="${gl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">📍 Maps</a>`:''}</div></div>`;
     }).join('');
   }
   document.getElementById('recD').innerHTML=cards(dl,'t-din')||'<p style="padding:12px;color:var(--t2)">No recommendations yet</p>';
@@ -773,7 +792,7 @@ function entryHTML(item,cat){
   let badges='';
   if(isCustom)badges+='<span class="badge b-cust">✚ Added</span>';
   if(isSkip)badges+='<span class="badge b-skip">SKIPPED</span>';
-  if(item.elderly==='yes')badges+='<span class="badge b-grn">Elderly✓</span>';
+  if(item.elderly==='yes')badges+='<span class="badge b-grn">Senior✓</span>';
   else if(item.elderly==='moderate')badges+='<span class="badge b-org">⚠</span>';
   if(item.type)badges+=`<span class="badge b-pur">${item.type}</span>`;
   if(cat==='snacks')badges+='<span class="badge b-pnk">🍡</span>';
@@ -802,7 +821,7 @@ function renderDay(idx){
   if(!m)return;
   const el=document.getElementById('dayContent');
   let h=`<div class="d-header"><div class="d-num">${m.day}</div><div class="d-info"><h2>${m.ti}</h2><p>${m.dt} · ${m.lo}</p></div></div>`;
-  if(m.et)h+=`<div class="sec s-eld"><h3>👴 Elderly Notes</h3><p>${m.et}</p></div>`;
+  if(m.et)h+=`<div class="sec s-eld"><h3>👴 Senior Travel Notes (5 Pax)</h3><p>${m.et}</p></div>`;
   if(m.dr){const d=m.dr;h+=`<div class="sec s-drv"><h3>🚗 Driving: ${d.f} → ${d.t}</h3><p>📏 ${d.km} · ⏱️ ${d.du}</p>${d.nt?`<p>📝 ${d.nt}</p>`:''}<a class="gm-link" href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(d.f+', Hokkaido, Japan')}&destination=${encodeURIComponent(d.t+', Hokkaido, Japan')}" target="_blank" rel="noopener noreferrer">🗺️ Google Maps Route</a></div>`;}
   // Accommodation
   if(m.acc){
@@ -836,7 +855,7 @@ function renderDay(idx){
       const stAddr=st.a||st.address||'';
       const gl=stAddr?gmapUrl(stAddr):gmapCoord(st.lat,st.lng);
       const gmDirect=(st.lat&&st.lng)?`https://www.google.com/maps/search/${encodeURIComponent(stName)}/@${st.lat},${st.lng},17z`:gl;
-      h+=`<div class="entry"><h4>${stName}${st.e==='yes'||st.elderly==='yes'?' <span class="badge b-grn">Elderly✓</span>':''}</h4>
+      h+=`<div class="entry"><h4>${stName}${st.e==='yes'||st.elderly==='yes'?' <span class="badge b-grn">Senior✓</span>':''}</h4>
         ${st.d||st.desc?`<p>${st.d||st.desc}</p>`:''}
         ${stAddr?`<p style="color:var(--bl);font-size:11px">📍 ${stAddr}</p>`:''}
         <div class="entry-acts">${gmDirect?`<a class="gm-link" href="${gmDirect}" target="_blank" rel="noopener noreferrer">📍 Google Maps</a>`:''}</div></div>`;
@@ -1026,7 +1045,7 @@ function renderPicks(){
       <div class="c-stars">${'★'.repeat(p.stars)}${'☆'.repeat(5-p.stars)}</div>
       <p>${p.d}</p>
       ${p.a?`<p class="c-addr">📍 ${p.a}</p>`:''}
-      <p style="font-size:11px">📌 ${p.area} ${p.eld==='yes'?'<span class="badge b-grn">Elderly✓</span>':p.eld==='moderate'?'<span class="badge b-org">⚠</span>':''}</p>
+      <p style="font-size:11px">📌 ${p.area} ${p.eld==='yes'?'<span class="badge b-grn">Senior✓</span>':p.eld==='moderate'?'<span class="badge b-org">⚠</span>':''}</p>
       <div class="c-tags">${p.tags.map(t=>`<span class="c-tag${t==='Food Guide'?' fg':''}">${t}</span>`).join('')}</div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin:6px 0 2px">
         ${gmDirect?`<a class="gm-link" href="${gmDirect}" target="_blank" rel="noopener noreferrer">📍 Google Maps</a>`:''}
@@ -1171,8 +1190,8 @@ function makePDF(){
 
   let body=`<div style="background:linear-gradient(135deg,#0a1628,#16213e);color:#fff;padding:24px;text-align:center;border-radius:8px;margin-bottom:14px">
     <p style="color:#d4a76a;font-size:11px;margin:0 0 4px;letter-spacing:1px">Produced by D. Chan</p>
-    <h1 style="font-size:22px;margin:0">🍁 Hokkaido Family Trip 2027 Itinerary</h1>
-    <p style="color:#d4a76a;margin:4px 0;font-size:12px">${fmtS(arr)} – ${fmtS(end)} · ${tripDays} Days / ${tripDays-1} Nights</p>
+    <h1 style="font-size:22px;margin:0">🍁 Hokkaido Family Trip 2027 · 5 Travelers</h1>
+    <p style="color:#d4a76a;margin:4px 0;font-size:12px">${fmtS(arr)} – ${fmtS(end)} · ${tripDays} Days / ${tripDays-1} Nights · 3 Adults + 2 Seniors</p>
     <p style="color:#d4a76a;font-size:11px">${tripFrom} → Tokyo Haneda → Hokkaido</p></div>`;
 
   body+=`<div style="display:flex;gap:14px;margin-bottom:14px;font-size:11px;background:#f8f9fa;padding:10px;border-radius:6px;border:1px solid #ddd;flex-wrap:wrap">
@@ -1208,7 +1227,7 @@ function makePDF(){
       items.forEach(it=>{
         const il=it.address?gmapUrl(it.address):gmapCoord(it.lat,it.lng);
         body+=`<div style="padding:2px 6px;border-left:3px solid ${s.c};font-size:10px;margin-bottom:2px">
-          <b>${it.name}</b>${it.time?' · ⏰ '+it.time:''}${it.elderly==='yes'?' · ✅ Elderly':''}${it.type?' · '+it.type:''}
+          <b>${it.name}</b>${it.time?' · ⏰ '+it.time:''}${it.elderly==='yes'?' · ✅ Senior-friendly':''}${it.type?' · '+it.type:''}
           <br>${it.desc||''}${it.address?'<br><span style="color:#2980b9;font-size:9px">📍 '+it.address+'</span>':''}${il?` <a href="${il}" style="color:#2980b9;font-size:9px">Maps↗</a>`:''}</div>`;
       });
     });
@@ -1235,8 +1254,8 @@ function makePDF(){
     .no-print p{color:#666;font-size:12px;margin-top:6px}
     </style></head><body>
     <div class="no-print">
-      <h2>🍁 Hokkaido Trip 2027 Itinerary</h2>
-      <p style="color:#999;font-size:11px;margin-bottom:8px">Produced by D. Chan</p>
+      <h2>🍁 Hokkaido Trip 2027 · 5 Travelers</h2>
+      <p style="color:#999;font-size:11px;margin-bottom:8px">3 Adults + 2 Seniors · Produced by D. Chan</p>
       <button onclick="window.print()">📥 Save as PDF / Print</button>
       <p>In the print dialog, select <b>"Save as PDF"</b> as the destination, then click Save.<br>All links will remain clickable in the saved PDF.</p>
     </div>
@@ -1365,7 +1384,7 @@ function generateItinerary(){
         et=`Drive from ${prevStop.lo} to ${stop.lo} (${drv.du}). Settle in, explore area.`;
       } else if(stop.days>1&&sd>0){
         title=sd===1&&stop.days>2?`${stop.lo} Sightseeing`:`${stop.lo} Day ${sd+1}`;
-        et=`Explore ${stop.lo} at leisure. ${sd===1?'Rest day option for elderly.':''}`;
+        et=`Explore ${stop.lo} at leisure. ${sd===1?'Rest day — essential for senior travelers.':''}`;
       } else {
         title=`${stop.lo} Sightseeing`;
         et=`Full day exploring ${stop.lo}.`;
