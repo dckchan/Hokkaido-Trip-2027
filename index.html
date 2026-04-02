@@ -164,6 +164,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Ar
 .btn-sm{padding:5px 10px;font-size:11px;min-height:30px}
 .erow{display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--c);border-radius:6px;margin-bottom:4px;border:1px solid rgba(0,0,0,.05);gap:8px}
 .erow .inf{flex:1;min-width:0}.erow .inf h4{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.erow .inf p{font-size:11px;color:var(--t2)}
+/* ─── OVERVIEW SECTION NAV ─── */
+.ov-nav{display:flex;gap:4px;padding:10px 0 6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;position:sticky;top:66px;z-index:50;background:var(--bg);margin:0 -14px;padding-left:14px;padding-right:14px}
+.ov-nav::-webkit-scrollbar{display:none}
+.ov-btn{padding:7px 14px;border:2px solid #ddd;border-radius:20px;background:#fff;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;min-height:34px;display:inline-flex;align-items:center;transition:.12s;flex-shrink:0}
+.ov-btn:hover,.ov-btn:active{border-color:var(--p);color:var(--p);background:#fff5f0}
 /* ─── TOAST ─── */
 .toast{position:fixed;top:75px;right:12px;padding:10px 16px;border-radius:8px;color:#fff;font-size:13px;font-weight:600;z-index:2000;transform:translateX(120%);transition:transform .3s;box-shadow:0 4px 14px rgba(0,0,0,.2)}
 .toast.show{transform:translateX(0)}
@@ -192,6 +197,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Ar
   .pk-tabs{gap:0;overflow-x:auto}
   .pk-tab{padding:8px 10px;font-size:12px;min-height:38px}
   .pk-days{flex-wrap:nowrap;overflow-x:auto}
+  .ov-nav{top:82px;margin:0 -8px;padding-left:8px;padding-right:8px}
+  .ov-btn{padding:6px 10px;font-size:11px;min-height:30px}
 }
 @media(max-width:380px){
   .cfg-grid{grid-template-columns:1fr}
@@ -271,10 +278,19 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
     <div class="stat"><div class="v">6</div><div class="l">Drives</div></div>
     <div class="stat"><div class="v">3</div><div class="l">Onsen</div></div>
   </div>
-  <div class="rec-sec"><h2>🍽️ Recommended Dining</h2><div class="rec-row" id="recD"></div></div>
-  <div class="rec-sec"><h2>📍 Top Points of Interest</h2><div class="rec-row" id="recP"></div></div>
-  <div class="rec-sec"><h2>🎯 Best Activities</h2><div class="rec-row" id="recA"></div></div>
-  <div class="card">
+  <!-- Overview Section Nav -->
+  <div class="ov-nav" id="ovNav">
+    <button class="ov-btn" onclick="scrollToSec('secRec')">🍽️ Dining</button>
+    <button class="ov-btn" onclick="scrollToSec('secPoi')">📍 POI</button>
+    <button class="ov-btn" onclick="scrollToSec('secAct')">🎯 Activities</button>
+    <button class="ov-btn" onclick="scrollToSec('secFood')">🍱 Food Guide</button>
+    <button class="ov-btn" onclick="scrollToSec('secSenior')">👴 Senior Guide</button>
+    <button class="ov-btn" onclick="scrollToSec('secRoute')">🗾 Route</button>
+  </div>
+  <div id="secRec" class="rec-sec"><h2>🍽️ Recommended Dining</h2><div class="rec-row" id="recD"></div></div>
+  <div id="secPoi" class="rec-sec"><h2>📍 Top Points of Interest</h2><div class="rec-row" id="recP"></div></div>
+  <div id="secAct" class="rec-sec"><h2>🎯 Best Activities</h2><div class="rec-row" id="recA"></div></div>
+  <div id="secFood" class="card">
     <h2>🍱 Hokkaido Food Guide — Japan's Food Basket</h2>
     <p style="color:var(--t2);font-size:12px;margin-bottom:10px">Hokkaido is widely regarded as Japan's food basket — surrounded by cold northern seas producing the sweetest seafood, and producing over half of Japan's milk. Use the <b>🌟 Picks</b> tab to add these to your itinerary. Items tagged <span class="badge b-grn" style="font-size:10px">Food Guide</span> are sourced from culinary research.</p>
     <div class="tips">
@@ -286,7 +302,7 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
       <div class="tip" style="border-left-color:#2980b9"><h4>📍 Where to Eat by Area</h4><p><b>Sapporo:</b> Nijo Market, Susukino, Ramen Republic. <b>Furano:</b> Farm cafes, cheese factory. <b>Hakodate:</b> Morning Market (open 5AM!), Lucky Pierrot. <b>Everywhere:</b> Seicomart stores along driving routes.</p></div>
     </div>
   </div>
-  <div class="card">
+  <div id="secSenior" class="card">
     <h2>👴 Senior-Friendly Travel Guide — 3 Adults + 2 Seniors</h2>
     <p style="color:var(--t2);font-size:12px;margin-bottom:10px">This itinerary is designed for a family group of 5 with 2 senior travelers. Every recommendation considers accessibility, pacing, and comfort.</p>
     <div class="tips">
@@ -295,12 +311,12 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
       <div class="tip"><h4>♿ Accessibility</h4><p>Farm Tomita & Shiroi Koibito Park are flat terrain. Ropeways at Mt Moiwa & Hakodate eliminate climbing. Morning markets have seated restaurants. Most airports and JR stations have elevators. Request wheelchair assistance at airports if needed.</p></div>
       <div class="tip"><h4>🍽️ Dining for 5</h4><p>Ryokans include dinner & breakfast for all guests. Reserve tables for 5 at popular restaurants. Markets have seated dining halls. Seicomart Hot Chef along driving routes for easy group meals. Avoid late dinner times (before 7 PM ideal for seniors).</p></div>
       <div class="tip"><h4>⏰ Pacing & Rest</h4><p>Built-in rest day at Lake Toya — critical for senior recovery. Limit to 2-3 activities per day. Start mornings at 9-10 AM (not too early). Adults can split up for harder activities while seniors rest at hotel/cafe. Afternoon rest breaks (1-3 PM) recommended.</p></div>
-      <div class="tip"><h4>🧳 Packing & Weather</h4><p>October in Hokkaido: 8-18°C. Pack layers for everyone. Comfortable walking shoes essential (no heels). Bring walking stick/cane if needed. Pharmacies (ドラッグストア) everywhere for medication. Carry seniors' prescriptions in English + Japanese.</p></div>
+      <div class="tip" id="tipWeather"><h4>🧳 Packing & Weather</h4><p>Loading weather info based on your departure date...</p></div>
       <div class="tip"><h4>💊 Health & Emergency</h4><p>Japan's hospitals are excellent. Carry travel insurance docs for all 5 travelers. Save hotel phone numbers. <b>Emergency: 119</b> (ambulance). Most Hokkaido hospitals have basic English. Bring a printed list of any medications and allergies in Japanese (ask hotel to help translate).</p></div>
       <div class="tip"><h4>💰 Budget (5 Pax)</h4><p>Meals: ~¥15,000-20,000/day for 5. Accommodation: ~¥50,000-80,000/night (2-3 rooms). Rental car: ~¥10,000/day (7-seater). Tolls: ~¥3,000-5,000/day. Activities: ~¥5,000-10,000/day total. Senior discounts available at many attractions (65+).</p></div>
     </div>
   </div>
-  <div class="card">
+  <div id="secRoute" class="card">
     <h2>🗾 Route Overview</h2>
     <p id="routeText">Vancouver ✈ → Tokyo Haneda → ✈ Sapporo → 🚗 Furano → Jozankei → Lake Toya → Hakodate ✈ → Tokyo Haneda ✈ → Vancouver</p>
     <div style="font-size:12px;padding:6px 10px;background:#ffeaa7;border-radius:6px;margin-top:6px">
@@ -449,7 +465,43 @@ function applyCfg(){
   calcCfg();
   try{localStorage.setItem('trip_cfg',JSON.stringify({from:tripFrom,depart:iso(tripDepart),days:tripDays}));}catch(e){}
   rebuildTrip();
+  updateWeatherTip();
   toast(`Trip: ${fmtS(tripArrival())}–${fmtS(lastDate())} (${tripDays} days)`);
+}
+
+/* ════════════════════════════════════════
+   OVERVIEW SECTION NAV & DYNAMIC WEATHER
+   ════════════════════════════════════════ */
+function scrollToSec(id){
+  const el=document.getElementById(id);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function updateWeatherTip(){
+  const el=document.getElementById('tipWeather');
+  if(!el)return;
+  const arr=tripArrival();
+  const month=arr.getMonth(); // 0-11
+  const monName=MON[month];
+
+  // Hokkaido seasonal weather data
+  const weather={
+    0:{temp:"-10 to -2°C",desc:"Deep winter — heavy snow, icy roads. Pack thermal layers, insulated waterproof boots, hand warmers. Snow chains for car essential. Roads may close. Sapporo Snow Festival (Feb)."},
+    1:{temp:"-8 to 0°C",desc:"Peak winter — Snow Festival month! Sub-zero temps. Full winter gear: down jacket, thermal underwear, waterproof boots, gloves, hand warmers. Slip-on ice grips for shoes highly recommended for seniors."},
+    2:{temp:"-4 to 4°C",desc:"Late winter — still snowy. Roads clearing. Pack warm layers, waterproof jacket. Spring snow possible. Temperatures rising slowly. Still need winter boots."},
+    3:{temp:"2 to 12°C",desc:"Early spring — snow melting, cool and crisp. Pack layers: medium jacket, sweaters, waterproof shell. Cherry blossoms arrive mid-May. Roads mostly clear."},
+    4:{temp:"8 to 18°C",desc:"Spring — cherry blossoms in Hokkaido! Pleasant temperatures. Light jacket, layers. Some rain possible. Comfortable walking shoes essential. Beautiful flower season begins."},
+    5:{temp:"12 to 22°C",desc:"Early summer — mild and pleasant. Light clothing with a jacket for evenings. Occasional rain. Lavender starts blooming in Furano. Great hiking weather."},
+    6:{temp:"17 to 25°C",desc:"Summer — warm but not extreme. T-shirts, light clothing. Sunscreen and hat essential. Furano lavender in full bloom! Afternoon showers possible. Bug spray for rural areas."},
+    7:{temp:"18 to 26°C",desc:"Peak summer — warmest month. Light, breathable clothing. Sunscreen, hat, sunglasses. Hydration important for seniors. Beer gardens and fireworks season! Some humidity."},
+    8:{temp:"14 to 22°C",desc:"Early autumn — cooling down beautifully. Layers recommended: light jacket + sweater. Autumn foliage begins late Sept. Comfortable walking season. Less crowded than summer."},
+    9:{temp:"8 to 18°C",desc:"Peak autumn 🍁 — stunning foliage! Pack layers for everyone. Medium jacket, sweaters, scarf. Comfortable walking shoes essential (no heels). Bring walking stick/cane for seniors."},
+    10:{temp:"2 to 10°C",desc:"Late autumn — cold, first snow possible. Warm jacket, thermal layers, scarf, gloves. Winter tires on rental car. Onsen season begins. Pack medications."},
+    11:{temp:"-4 to 2°C",desc:"Early winter — snow arriving. Full winter gear needed. Insulated jacket, thermal base layers, waterproof boots, gloves, hat. Ice grips for shoes. Ski season opens."}
+  };
+
+  const w=weather[month]||weather[9];
+  el.innerHTML=`<h4>🧳 Packing & Weather — ${monName} in Hokkaido</h4><p><b>${monName} temps: ${w.temp}</b>. ${w.desc} Pharmacies (ドラッグストア) everywhere for medication. Carry seniors' prescriptions in English + Japanese.</p>`;
 }
 
 /* ════════════════════════════════════════
@@ -642,7 +694,15 @@ const PICKS=[
 {id:'fg12',cat:'dining',n:"Seicomart Hot Chef (セイコーマート)",area:"All Hokkaido",d:"Hokkaido's beloved local convenience store — 'Hot Chef' section serves freshly made fried chicken, bento & katsudon loved by locals. Find one everywhere on your drive!",a:"Various locations across Hokkaido",lat:43.0600,lng:141.3540,stars:4,tags:["Convenience","Hot Chef","Food Guide"],eld:"yes",t:"Any",days:[1,2,3,4,5,6,7,8,9],web:"https://www.seicomart.co.jp/"},
 {id:'fg13',cat:'dining',n:"Premium Kaisendon (Deluxe Bowl)",area:"Hakodate",d:"Luxurious seafood bowl featuring abalone, fatty tuna, uni, ikura & crab — the ultimate Hakodate morning market experience. Cold northern seas make the difference.",a:"9-19 Wakamatsu-cho, Hakodate 040-0063, Japan",lat:41.7730,lng:140.7270,stars:5,tags:["Premium","Abalone","Food Guide"],eld:"yes",t:"7:00 AM",days:[7,8],web:"https://www.tripadvisor.com/Attraction_Review-g298151-d1373508-Reviews-Hakodate_Morning_Market-Hakodate_Hokkaido.html"},
 {id:'fg14',cat:'snacks',n:"Hokkaido Milk Soft Serve (牧場ソフト)",area:"Furano",d:"Incredibly rich soft serve from local farm milk — Hokkaido dairy is world-class. Available at farms, roadside stations, and markets throughout the region.",a:"Farm Tomita, Nakafurano-cho, Japan",lat:43.3350,lng:142.3770,stars:4,tags:["Farm Fresh","Dairy","Food Guide"],eld:"yes",t:"Any",days:[3,5,6],web:"https://www.farm-tomita.co.jp/en/"},
-{id:'fg15',cat:'dining',n:"Tachikama Sashimi (たちかま)",area:"Sapporo",d:"Winter delicacy — cod milt (shirako) processed into a bouncy, creamy kamaboko. A unique Hokkaido texture experience found at izakayas Oct-Feb.",a:"Susukino, Chuo-ku, Sapporo, Japan",lat:43.0525,lng:141.3535,stars:4,tags:["Winter Only","Delicacy","Food Guide"],eld:"yes",t:"7:00 PM",days:[1,2],web:"https://www.japan-guide.com/e/e5311.html"}
+{id:'fg15',cat:'dining',n:"Tachikama Sashimi (たちかま)",area:"Sapporo",d:"Winter delicacy — cod milt (shirako) processed into a bouncy, creamy kamaboko. A unique Hokkaido texture experience found at izakayas Oct-Feb.",a:"Susukino, Chuo-ku, Sapporo, Japan",lat:43.0525,lng:141.3535,stars:4,tags:["Winter Only","Delicacy","Food Guide"],eld:"yes",t:"7:00 PM",days:[1,2],web:"https://www.japan-guide.com/e/e5311.html"},
+// ═══ HOKKAIDO DISTILLERIES & BREWERIES ═══
+{id:'ds1',cat:'activity',n:"Nikka Whisky Yoichi Distillery (余市蒸溜所)",area:"Otaru",d:"⭐ Japan's legendary whisky distillery, founded 1934 by Masataka Taketsuru — the father of Japanese whisky. Free guided tours, museum, tasting room (Yoichi Single Malt & Super Nikka). Coal-fired copper pot stills still in use. Beautiful stone buildings on manicured grounds. Book online in advance!",a:"7-6 Kurokawacho, Yoichi-cho, Yoichi-gun, Hokkaido 046-0003, Japan",lat:43.1956,lng:140.7793,stars:5,tags:["Free Tour","Whisky Tasting","Since 1934","Must-Visit"],eld:"yes",t:"9:00 AM",tp:"Distillery",days:[1,2],web:"https://www.tripadvisor.com/Attraction_Review-g1025642-d1363054-Reviews-Nikka_Whisky_Yoichi_Distillery-Yoichi_cho_Yoichi_gun_Hokkaido.html"},
+{id:'ds2',cat:'activity',n:"Sapporo Beer Museum (サッポロビール博物館)",area:"Sapporo",d:"Japan's only beer museum — learn 140+ years of Sapporo Beer history in a beautiful red-brick Meiji-era factory. Premium guided tour includes exclusive beer tasting. Star Hall serves Sapporo Classic (Hokkaido-only draft) and pairs perfectly with Jingisukan lamb BBQ at the adjacent Beer Garden.",a:"Kita 7-jo Higashi 9, Higashi-ku, Sapporo 065-8633, Japan",lat:43.0697,lng:141.3614,stars:4,tags:["Beer Tasting","Meiji Era","Jingisukan"],eld:"yes",t:"11:00 AM",tp:"Brewery",days:[1,2],web:"https://www.sapporobeer.jp/english/brewery/s_museum/"},
+{id:'ds3',cat:'activity',n:"Benizakura Distillery (紅櫻蒸溜所)",area:"Sapporo",d:"Hokkaido's first craft gin distillery, opened 2018 in historic Benizakura Park — one of Sapporo's oldest Japanese gardens. Award-winning 9148 gin uses local botanicals. Distillery tours, gin tasting, and beautiful park grounds to stroll. A hidden gem for spirits lovers.",a:"Benizakura Park, Minami-ku, Sapporo, Hokkaido, Japan",lat:43.0100,lng:141.3430,stars:4,tags:["Craft Gin","Since 2018","Hidden Gem"],eld:"yes",t:"10:00 AM",tp:"Distillery",days:[1,2],web:"https://benizakura-distillery.jp/"},
+{id:'ds4',cat:'activity',n:"Otaru Beer Brewery (小樽ビール醸造所)",area:"Otaru",d:"Authentic German-style brewery in a stone canal warehouse. Run by German Baumeister Johannes Braun using the 500-year-old Reinheitsgebot purity law. Free 20-min tours every 30 min (no reservation needed). Fresh craft beer and hearty food in the atmospheric taproom overlooking Otaru Canal.",a:"5-4 Minatomachi, Otaru, Hokkaido 047-0007, Japan",lat:43.1968,lng:140.9935,stars:4,tags:["German Style","Canal Side","Free Tour"],eld:"yes",t:"11:30 AM",tp:"Brewery",days:[1,2],web:"https://www.tripadvisor.com/Restaurant_Review-g298143-d1168598-Reviews-Otaru_Beer_Otaru_Warehouse_No_1-Otaru_Hokkaido.html"},
+{id:'ds5',cat:'activity',n:"Furano Wine Factory (ふらのワイン)",area:"Furano",d:"City-run hilltop winery with free tasting and factory tour. Grapes grown in Furano's ideal climate — big day/night temperature swings produce excellent wine. Furano Wine (red) is their signature. Non-drinkers: try 100% grape juice. Beautiful vineyard views with lavender fields nearby.",a:"Shimizuyama, Furano, Hokkaido 076-0048, Japan",lat:43.3340,lng:142.3680,stars:4,tags:["Free Tasting","Vineyard Views","City-Run"],eld:"yes",t:"10:00 AM",tp:"Winery",days:[3],web:"https://www.furanowine.jp/"},
+{id:'ds6',cat:'activity',n:"Chitosetsuru Sake Museum (千歳鶴酒ミュージアム)",area:"Sapporo",d:"Sapporo's only sake brewery, founded 1872 — the oldest in the city. Museum showcases sake-making history and techniques. Free tasting of Ginjo, Junmai, and Honjozo. Non-drinkers can enjoy sake-lees soft serve ice cream! 3 min walk from Susukino Station.",a:"Minami 3-jo Higashi 5, Chuo-ku, Sapporo, Hokkaido, Japan",lat:43.0545,lng:141.3610,stars:4,tags:["Since 1872","Free Tasting","Sake"],eld:"yes",t:"10:00 AM",tp:"Brewery",days:[1,2],web:"https://www.nipponseishu.co.jp/museum/"},
+{id:'ds7',cat:'activity',n:"Hokkaido Akkeshi Distillery (厚岸蒸溜所)",area:"All Hokkaido",d:"Award-winning craft whisky distillery in remote Akkeshi village on Hokkaido's eastern coast. Cool misty climate and peat marshlands produce Islay-style single malts. Tours via Akkeshi Conchiglie (book ahead). Whisky available at Sapporo bars. For serious whisky enthusiasts willing to make the journey.",a:"4-109-2 Miyazono, Akkeshi-cho, Akkeshi-gun, Hokkaido 088-1124, Japan",lat:43.0500,lng:144.8500,stars:5,tags:["Craft Whisky","Islay Style","Remote"],eld:"moderate",t:"10:00 AM",tp:"Distillery",days:[1,2],web:"https://akkeshi-distillery.com/en/"}
 ];
 
 /* ════════════════════════════════════════
@@ -1553,6 +1613,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   renderRecs();
   renderPickDays();
   renderPicks();
+  updateWeatherTip();
   setTimeout(initMap,300);
 });
 </script>
