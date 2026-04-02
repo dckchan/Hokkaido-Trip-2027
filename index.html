@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>🍁 Hokkaido Family Driving Trip Planner 2027</title>
+<meta name="description" content="Interactive Hokkaido family driving trip planner with itinerary, map, dining picks, and elderly-friendly recommendations.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--p:#b5451b;--p2:#d4572a;--ac:#d4a76a;--bg:#f4f1ec;--c:#fff;--t:#2c2c2c;--t2:#777;--hd:#16213e;--ok:#27ae60;--bl:#2980b9;--wn:#e67e22;--pu:#8854ad;--pk:#d63384;--rd:#e74c3c;--r:10px}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--t);line-height:1.55;overscroll-behavior:none}
+/* ─── CREDIT ─── */
+.credit{position:fixed;top:0;left:0;right:0;height:20px;background:linear-gradient(90deg,#0a1628,#16213e,#0a1628);color:var(--ac);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;z-index:1100;letter-spacing:.8px}
+/* ─── NAV ─── */
+.nav{background:var(--hd);color:#fff;padding:0 12px;display:flex;align-items:center;height:46px;position:fixed;top:20px;left:0;right:0;z-index:1000;box-shadow:0 2px 12px rgba(0,0,0,.25);gap:6px}
+.nav h1{font-size:15px;font-weight:700;white-space:nowrap;margin-right:4px}.nav h1 span{color:var(--ac)}
+.tabs{display:flex;gap:2px;height:100%;overflow-x:auto;flex:1;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:none;color:rgba(255,255,255,.6);padding:0 10px;cursor:pointer;font-size:12px;font-weight:500;height:100%;display:flex;align-items:center;gap:3px;border-bottom:3px solid transparent;white-space:nowrap;transition:.15s;min-height:44px}
+.tab:hover,.tab:active{color:#fff;background:rgba(255,255,255,.06)}
+.tab.on{color:#fff;border-bottom-color:var(--ac);background:rgba(255,255,255,.08)}
+.pdf-btn{background:linear-gradient(135deg,var(--ok),#2ecc71);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;min-height:34px}
+.pdf-btn:active{transform:scale(.97)}
+.nav-actions{display:flex;gap:4px;flex-shrink:0}
+/* ─── PANELS ─── */
+.pn{display:none;padding:14px;max-width:1360px;margin:74px auto 80px}.pn.on{display:block}
+.card{background:var(--c);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.06)}
+.card h2{font-size:15px;margin-bottom:8px;color:var(--p);font-weight:700}
+/* ─── TRIP CONFIG ─── */
+.trip-cfg{background:linear-gradient(135deg,#fef9f3,#fdf2e9);border:2px solid var(--ac);border-radius:var(--r);padding:18px;margin-bottom:16px}
+.trip-cfg h2{font-size:16px;color:var(--hd);margin-bottom:12px;font-weight:700}
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto auto;gap:10px;align-items:end}
+.cfg-f{display:flex;flex-direction:column;gap:3px}
+.cfg-f label{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.4px}
+.cfg-f input,.cfg-f select{padding:9px 10px;border:2px solid #ddd;border-radius:8px;font-size:14px;font-weight:600;background:#fff;-webkit-appearance:none;min-height:44px}
+.cfg-f input:focus,.cfg-f select:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px rgba(181,69,27,.12)}
+.cfg-info{padding:8px 10px;background:rgba(22,33,62,.06);border-radius:8px;display:flex;flex-direction:column;gap:1px}
+.cfg-info .lbl{font-size:10px;color:var(--t2);font-weight:700;text-transform:uppercase}
+.cfg-info .val{font-size:14px;font-weight:700;color:var(--hd)}
+.cfg-apply{padding:10px 20px;background:var(--p);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;min-height:44px;white-space:nowrap}
+.cfg-apply:active{background:var(--p2)}
+/* ─── FLIGHT BANNER ─── */
+.flight{background:linear-gradient(135deg,#0a1628,#16213e,#1a1a3e);color:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.fl-seg{flex:1;min-width:160px}.fl-seg h3{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ac);margin-bottom:3px;font-weight:700}
+.fl-city{font-size:18px;font-weight:800}.fl-det{font-size:12px;color:rgba(255,255,255,.65);margin-top:2px}
+.fl-arrow{font-size:22px;color:var(--ac);flex-shrink:0}
+.fl-dates{background:rgba(255,255,255,.07);border-radius:8px;padding:10px 14px;text-align:center;min-width:150px}
+.fl-dates .lbl{font-size:10px;color:var(--ac);text-transform:uppercase;font-weight:600}
+.fl-dates .val{font-size:14px;font-weight:700;margin-top:2px}
+/* ─── STATS ─── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:14px}
+.stat{background:var(--c);border-radius:var(--r);padding:12px 8px;text-align:center;border:1px solid rgba(0,0,0,.05)}
+.stat .v{font-size:20px;font-weight:800;color:var(--p)}.stat .l{font-size:11px;color:var(--t2);margin-top:2px}
+/* ─── SCROLLABLE RECOMMENDATIONS ─── */
+.rec-sec{margin-bottom:14px}.rec-sec h2{font-size:14px;margin-bottom:6px;color:var(--p);font-weight:700}
+.rec-row{display:flex;gap:10px;overflow-x:auto;padding:4px 0 10px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scrollbar-width:none}
+.rec-row::-webkit-scrollbar{display:none}
+.rec-c{flex:0 0 220px;scroll-snap-align:start;background:var(--c);border-radius:var(--r);border:1px solid rgba(0,0,0,.06);overflow:hidden;cursor:pointer;transition:.15s}
+.rec-c:hover,.rec-c:active{box-shadow:0 4px 12px rgba(0,0,0,.1);border-color:var(--p);transform:translateY(-2px)}
+.rec-top{height:4px}
+.rec-top.t-din{background:linear-gradient(90deg,#e67e22,#f39c12)}
+.rec-top.t-poi{background:linear-gradient(90deg,#27ae60,#2ecc71)}
+.rec-top.t-act{background:linear-gradient(90deg,#8854ad,#a06cd5)}
+.rec-bd{padding:10px 12px}
+.rec-bd h4{font-size:13px;margin-bottom:2px;font-weight:700}
+.rec-bd p{font-size:11px;color:var(--t2);margin-bottom:2px}
+.tag-s{display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600;margin:1px 2px 1px 0}
+.tag-star{background:#fff3cd;color:#856404}.tag-eld{background:#d4edda;color:#155724}
+.rec-day{font-size:10px;background:var(--bg);padding:2px 6px;border-radius:8px;display:inline-block;margin-top:3px}
+.gm-link{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;background:#4285f4;color:#fff;border-radius:4px;font-size:11px;text-decoration:none;font-weight:600;margin-top:3px;min-height:24px}
+.gm-link:active{background:#3367d6}
+.web-link{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;background:#e67e22;color:#fff;border-radius:4px;font-size:11px;text-decoration:none;font-weight:600;margin-top:3px;min-height:24px}
+.web-link:active{background:#d35400}
+/* ─── ELDERLY TIPS ─── */
+.tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.tip{padding:10px;border-radius:8px;border-left:4px solid var(--ac);background:#fffdf7}
+.tip h4{color:var(--p);font-size:12px;margin-bottom:2px}.tip p{font-size:11px;color:var(--t2)}
+/* ─── ITINERARY ─── */
+.itin{display:grid;grid-template-columns:170px 1fr;gap:12px}
+.day-nav{position:sticky;top:72px;align-self:start;max-height:calc(100vh - 90px);overflow-y:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.day-nav::-webkit-scrollbar{display:none}
+.day-btn{display:block;width:100%;text-align:left;padding:8px 10px;border:1px solid transparent;background:var(--c);cursor:pointer;border-radius:7px;margin-bottom:3px;font-size:12px;transition:.12s;min-height:44px}
+.day-btn:active{background:#fff5f0}.day-btn.on{background:var(--p);color:#fff;border-color:var(--p)}
+.day-btn .d-date{font-weight:700;display:block}.day-btn .d-loc{font-size:10px;opacity:.7;display:block;margin-top:1px}
+.d-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--ac)}
+.d-num{background:var(--p);color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0}
+.d-info h2{font-size:17px;font-weight:700;margin-bottom:0}.d-info p{color:var(--t2);font-size:12px}
+.sec{border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid rgba(0,0,0,.06)}
+.sec.s-acc{background:#eff6ff;border-color:#b8d4f0}.sec.s-poi{background:#effff4;border-color:#b3e6c7}.sec.s-din{background:#fff8ef;border-color:#fcd9b3}.sec.s-act{background:#f5efff;border-color:#d0b3f0}.sec.s-snk{background:#fef0f5;border-color:#f5b3d0}.sec.s-drv{background:#fff0f0;border-color:#f0b3b3}.sec.s-eld{background:#fffde7;border-color:#fff176}
+.sec-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.sec-h h3{font-size:14px;font-weight:700;margin:0}
+.entry{padding:7px 8px;border-radius:6px;margin-bottom:4px;background:rgba(255,255,255,.5);border-left:3px solid transparent}
+.entry.e-custom{border-left-color:var(--ok);background:rgba(39,174,96,.04)}
+.entry.e-skip{opacity:.45;border-left-color:var(--rd);background:rgba(231,76,60,.03)}
+.entry h4{font-size:13px;font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.entry p{font-size:11px;color:var(--t2);margin-bottom:1px}
+.entry-acts{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;align-items:center}
+.e-btn{padding:4px 8px;border-radius:4px;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:11px;white-space:nowrap;min-height:28px;display:inline-flex;align-items:center}
+.e-btn:active{background:#f0f0f0}
+.unskip{padding:5px 12px;border-radius:5px;border:2px solid var(--ok);background:rgba(39,174,96,.06);color:var(--ok);cursor:pointer;font-size:12px;font-weight:700;min-height:32px}
+.unskip:active{background:var(--ok);color:#fff}
+.badge{display:inline-block;padding:1px 5px;border-radius:12px;font-size:10px;font-weight:700;margin-left:2px}
+.b-grn{background:#d4edda;color:#155724}.b-org{background:#fff3cd;color:#856404}.b-pur{background:#e8d5f5;color:#5b2c6f}.b-pnk{background:#fce4ec;color:#880e4f}.b-cust{background:#d5f5e3;color:#1e8449}.b-skip{background:#fce4e4;color:#922}
+.add-btn{width:100%;padding:7px;border:2px dashed #ccc;border-radius:6px;background:transparent;cursor:pointer;color:var(--t2);font-size:12px;margin-top:4px;min-height:36px}
+.add-btn:active{border-color:var(--p);color:var(--p)}
+/* ─── MAP ─── */
+#map{height:calc(100vh - 150px);border-radius:var(--r);border:1px solid rgba(0,0,0,.08)}
+.map-ctrl{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;align-items:center}
+.map-ctrl select{padding:6px 8px;border-radius:6px;border:1px solid #ccc;background:#fff;font-size:12px;min-height:36px}
+.map-ctrl label{display:flex;align-items:center;gap:3px;cursor:pointer;padding:4px 8px;border-radius:6px;background:#fff;border:1px solid #ddd;font-size:11px;min-height:32px}
+.map-ctrl input[type="checkbox"]{accent-color:var(--p);width:16px;height:16px}
+.map-wrap{position:relative}
+.legend{position:absolute;bottom:10px;right:10px;background:#fff;padding:8px 10px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.15);z-index:500;font-size:11px}
+.leg-i{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+.leg-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+/* ─── CRITICS PICKS ─── */
+.pk-tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #eee;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.pk-tabs::-webkit-scrollbar{display:none}
+.pk-tab{padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:700;color:var(--t2);border-bottom:3px solid transparent;white-space:nowrap;min-height:44px;transition:.15s}
+.pk-tab:hover,.pk-tab:active{color:var(--p);background:rgba(181,69,27,.04)}
+.pk-tab.on{color:var(--p);border-bottom-color:var(--p);background:rgba(181,69,27,.06)}
+.pk-days{display:flex;gap:4px;padding:10px 0 8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:wrap}
+.pk-days::-webkit-scrollbar{display:none}
+.pk-day{padding:6px 14px;border:2px solid #ddd;border-radius:20px;background:#fff;cursor:pointer;font-size:12px;font-weight:600;min-height:34px;display:inline-flex;align-items:center;white-space:nowrap;transition:.12s}
+.pk-day:hover,.pk-day:active{border-color:var(--p);color:var(--p)}
+.pk-day.on{background:var(--p);color:#fff;border-color:var(--p)}
+.pk-summary{padding:8px 12px;background:linear-gradient(135deg,#fef9f3,#fdf2e9);border:1px solid var(--ac);border-radius:8px;margin-bottom:10px;font-size:12px;color:var(--hd);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pk-summary b{font-size:14px}
+.c-filters{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+.c-f{padding:6px 14px;border:2px solid #ddd;border-radius:20px;background:#fff;cursor:pointer;font-size:12px;font-weight:600;min-height:36px;display:inline-flex;align-items:center}
+.c-f:active{border-color:var(--p)}.c-f.on{background:var(--p);color:#fff;border-color:var(--p)}
+.c-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.c-card{background:var(--c);border-radius:var(--r);border:1px solid rgba(0,0,0,.06);overflow:hidden;transition:.15s}
+.c-card:active{box-shadow:0 2px 8px rgba(0,0,0,.08)}.c-card.added{opacity:.5;border-color:var(--ok)}
+.c-card.selected-stay{opacity:1;border-color:var(--bl);border-width:2px;background:#f0f7ff;box-shadow:0 2px 10px rgba(41,128,185,.15)}
+.c-bar{height:4px}.c-bar.b-din{background:#e67e22}.c-bar.b-poi{background:#27ae60}.c-bar.b-act{background:#8854ad}.c-bar.b-snk{background:#d63384}.c-bar.b-acc{background:#2980b9}
+.c-body{padding:12px 14px}
+.c-body h4{font-size:14px;font-weight:700;margin-bottom:3px}
+.c-body p{font-size:12px;color:var(--t2);margin-bottom:2px}
+.c-addr{font-size:11px;color:var(--bl)}
+.c-stars{color:#f39c12;font-size:14px;margin-bottom:3px}
+.c-tags{display:flex;gap:3px;flex-wrap:wrap;margin:4px 0}
+.c-tag{font-size:10px;padding:2px 6px;border-radius:8px;background:var(--bg);color:var(--t2);font-weight:500}
+.c-tag.fg{background:linear-gradient(135deg,#fff3e0,#ffe0b2);color:#e65100;font-weight:700;border:1px solid #ffcc80}
+.c-acts{display:flex;gap:5px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.c-acts select{padding:4px 6px;border:1px solid #ddd;border-radius:5px;font-size:12px;min-height:32px}
+.c-add{padding:5px 12px;border:none;border-radius:5px;background:var(--ok);color:#fff;font-size:12px;font-weight:700;cursor:pointer;min-height:32px}
+.c-undo{padding:5px 10px;border:2px solid var(--rd);border-radius:5px;background:rgba(231,76,60,.05);color:var(--rd);cursor:pointer;font-size:12px;font-weight:700;min-height:32px}
+.c-undo:active{background:var(--rd);color:#fff}
+.c-added{font-size:12px;color:var(--ok);font-weight:700}
+/* ─── DATA ENTRY ─── */
+.form-g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.f-field{display:flex;flex-direction:column;gap:2px}.f-field.full{grid-column:1/-1}
+.f-field label{font-size:11px;font-weight:700;color:var(--t2)}
+.f-field input,.f-field select,.f-field textarea{padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;min-height:40px;-webkit-appearance:none}
+.f-field input:focus,.f-field select:focus,.f-field textarea:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px rgba(181,69,27,.1)}
+.f-field textarea{resize:vertical;min-height:60px}
+.btn{padding:8px 18px;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:4px;min-height:40px}
+.btn-p{background:var(--p);color:#fff}.btn-p:active{background:var(--p2)}
+.btn-g{background:var(--ok);color:#fff}.btn-x{background:#95a5a6;color:#fff}
+.btn-sm{padding:5px 10px;font-size:11px;min-height:30px}
+.erow{display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--c);border-radius:6px;margin-bottom:4px;border:1px solid rgba(0,0,0,.05);gap:8px}
+.erow .inf{flex:1;min-width:0}.erow .inf h4{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.erow .inf p{font-size:11px;color:var(--t2)}
+/* ─── TOAST ─── */
+.toast{position:fixed;top:75px;right:12px;padding:10px 16px;border-radius:8px;color:#fff;font-size:13px;font-weight:600;z-index:2000;transform:translateX(120%);transition:transform .3s;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.toast.show{transform:translateX(0)}
+.toast.ok{background:var(--ok)}.toast.info{background:var(--bl)}.toast.warn{background:var(--wn)}
+/* ─── RESPONSIVE ─── */
+@media(max-width:768px){
+  .credit{font-size:10px;height:18px}
+  .nav{top:18px;height:auto;flex-wrap:wrap;padding:6px 8px;gap:2px}
+  .nav h1{margin:0;font-size:13px;flex-shrink:0}
+  .nav-actions{display:flex;gap:3px;margin-left:auto}
+  .tabs{width:100%;order:1;flex:none;overflow-x:auto;gap:0}
+  .tab{padding:0 7px;font-size:11px;height:34px;min-height:34px;flex-shrink:0}
+  .pdf-btn{padding:5px 8px;font-size:10px;min-height:28px;flex-shrink:0}
+  .pn{padding:8px;margin-top:100px}
+  .cfg-grid{grid-template-columns:1fr 1fr}
+  .itin{grid-template-columns:1fr}
+  .day-nav{position:static;display:flex;overflow-x:auto;gap:4px;padding-bottom:4px;max-height:none}
+  .day-btn{min-width:110px;flex-shrink:0}
+  .form-g{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(3,1fr)}
+  #map{height:55vh}
+  .rec-c{flex:0 0 200px}
+  .c-grid{grid-template-columns:1fr}
+  .flight{flex-direction:column;gap:8px}
+  .fl-arrow{transform:rotate(90deg)}
+  .pk-tabs{gap:0;overflow-x:auto}
+  .pk-tab{padding:8px 10px;font-size:12px;min-height:38px}
+  .pk-days{flex-wrap:nowrap;overflow-x:auto}
+}
+@media(max-width:380px){
+  .cfg-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+.leaflet-popup-content{font-size:13px;line-height:1.4}
+.leaflet-popup-content .gm-link{margin-top:4px}
+/* ─── FOCUS VISIBLE ─── */
+.tab:focus-visible,.day-btn:focus-visible,.e-btn:focus-visible,.btn:focus-visible,.c-f:focus-visible,.c-add:focus-visible,.c-undo:focus-visible,.unskip:focus-visible,.add-btn:focus-visible,.cfg-apply:focus-visible,.pdf-btn:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div class="credit">Produced by D. Chan</div>
+<noscript><div style="padding:40px 20px;text-align:center;font-size:16px;color:#b5451b"><b>JavaScript is required</b><br>Please enable JavaScript to use the Hokkaido Trip Planner.</div></noscript>
+
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <h1>🍁 <span>Hokkaido</span> Trip 2027</h1>
+  <div class="tabs" id="navTabs" role="tablist">
+    <button class="tab on" data-p="overview" role="tab" aria-selected="true">📋 Overview</button>
+    <button class="tab" data-p="itinerary" role="tab" aria-selected="false">📅 Itinerary</button>
+    <button class="tab" data-p="map" role="tab" aria-selected="false">🗺️ Map</button>
+    <button class="tab" data-p="picks" role="tab" aria-selected="false">🌟 Picks</button>
+    <button class="tab" data-p="entry" role="tab" aria-selected="false">✏️ Entry</button>
+  </div>
+  <div class="nav-actions">
+    <button class="pdf-btn" onclick="makePDF()" aria-label="Export trip as PDF">📥 PDF</button>
+    <button class="pdf-btn" style="background:linear-gradient(135deg,#2980b9,#3498db)" onclick="saveAsHTML()" aria-label="Save as HTML file">💾 Save</button>
+  </div>
+</nav>
+
+<div id="toast" class="toast"></div>
+
+<!-- ═══════════ OVERVIEW ═══════════ -->
+<div class="pn on" id="pn-overview">
+  <div class="trip-cfg">
+    <h2>📅 Trip Settings — Select Departure & Duration</h2>
+    <div class="cfg-grid">
+      <div class="cfg-f"><label>Departure City</label><input id="cfgFrom" value="Vancouver" placeholder="City"></div>
+      <div class="cfg-f"><label>Departure Date</label><input type="date" id="cfgDate" onchange="calcCfg()"></div>
+      <div class="cfg-f"><label>Trip Days</label><input type="number" id="cfgDays" min="1" max="60" value="10" onchange="calcCfg()"></div>
+      <div class="cfg-info"><span class="lbl">Arrival (Japan)</span><span class="val" id="cfgArr">—</span></div>
+      <button class="cfg-apply" onclick="applyCfg()">✅ Apply</button>
+      <button class="cfg-apply" style="background:linear-gradient(135deg,#8854ad,#a06cd5)" onclick="generateItinerary()">🔄 Generate Itinerary</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <div class="cfg-info"><span class="lbl">Return Date</span><span class="val" id="cfgEnd">—</span></div>
+      <div class="cfg-info"><span class="lbl">Total Nights</span><span class="val" id="cfgNights">—</span></div>
+    </div>
+  </div>
+  <div class="flight" id="flightBox"></div>
+  <div class="stats">
+    <div class="stat"><div class="v" id="stDays">10</div><div class="l">Days</div></div>
+    <div class="stat"><div class="v" id="stAcc">6</div><div class="l">Stays</div></div>
+    <div class="stat"><div class="v" id="stPOI">12</div><div class="l">POI</div></div>
+    <div class="stat"><div class="v" id="stDin">10</div><div class="l">Dining</div></div>
+    <div class="stat"><div class="v">6</div><div class="l">Drives</div></div>
+    <div class="stat"><div class="v">3</div><div class="l">Onsen</div></div>
+  </div>
+  <div class="rec-sec"><h2>🍽️ Recommended Dining</h2><div class="rec-row" id="recD"></div></div>
+  <div class="rec-sec"><h2>📍 Top Points of Interest</h2><div class="rec-row" id="recP"></div></div>
+  <div class="rec-sec"><h2>🎯 Best Activities</h2><div class="rec-row" id="recA"></div></div>
+  <div class="card">
+    <h2>🍱 Hokkaido Food Guide — Japan's Food Basket</h2>
+    <p style="color:var(--t2);font-size:12px;margin-bottom:10px">Hokkaido is widely regarded as Japan's food basket — surrounded by cold northern seas producing the sweetest seafood, and producing over half of Japan's milk. Use the <b>🌟 Picks</b> tab to add these to your itinerary. Items tagged <span class="badge b-grn" style="font-size:10px">Food Guide</span> are sourced from culinary research.</p>
+    <div class="tips">
+      <div class="tip" style="border-left-color:#e67e22"><h4>🦀 Fresh Seafood</h4><p><b>Kaisendon</b> (seafood bowls) with uni, ikura, scallops & crab. Try <b>hairy crab</b> (kegani) for sweet meat and rich roe. Conveyor belt sushi in Hokkaido is world-class — look for <b>hakaku</b> (octagonal fish). Don't miss <b>ichiya-boshi</b> grilled hokke (overnight-dried mackerel).</p></div>
+      <div class="tip" style="border-left-color:#e74c3c"><h4>🍜 Regional Ramen</h4><p><b>Miso ramen</b> — Sapporo classic, rich & slightly sweet. <b>Shio (salt) ginger ramen</b> — lighter, warming. <b>Ebisoba</b> — shrimp broth at Chitose Airport. <b>Chicken Pyon</b> — modern creamy chicken with rosemary foam.</p></div>
+      <div class="tip" style="border-left-color:#27ae60"><h4>🍖 Signature Dishes</h4><p><b>Genghis Khan (Jingisukan)</b> — cook lamb on a helmet-shaped grill. <b>Soup Curry</b> — Sapporo original with 'Milk Style' variant using Hokkaido milk. <b>Chikuwapan</b> — bread roll with fish cake & tuna mayo, only in Hokkaido!</p></div>
+      <div class="tip" style="border-left-color:#8854ad"><h4>🍦 Dairy & Sweets</h4><p>Hokkaido produces over <b>half of Japan's milk</b>. Try <b>Shiroi Koibito</b> cookies, <b>crab cream croquettes</b> made with local milk, <b>Hangansama</b> rice cakes (Hokkaido Shrine exclusive), and campus ice cream at <b>Hokkaido University</b>.</p></div>
+      <div class="tip" style="border-left-color:#d63384"><h4>🎌 Unique Delicacies</h4><p><b>Tachikama</b> sashimi — bouncy cod milt kamaboko (Oct-Feb winter delicacy). <b>Seicomart Hot Chef</b> — local convenience store with freshly made fried chicken loved by all Hokkaido locals.</p></div>
+      <div class="tip" style="border-left-color:#2980b9"><h4>📍 Where to Eat by Area</h4><p><b>Sapporo:</b> Nijo Market, Susukino, Ramen Republic. <b>Furano:</b> Farm cafes, cheese factory. <b>Hakodate:</b> Morning Market (open 5AM!), Lucky Pierrot. <b>Everywhere:</b> Seicomart stores along driving routes.</p></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>👴 Elderly-Friendly Driving Trip Tips</h2>
+    <div class="tips">
+      <div class="tip"><h4>🚗 Driving</h4><p>Max ~3 hrs per leg. Stop at 道の駅 (roadside stations). Hokkaido roads are wide and well-maintained.</p></div>
+      <div class="tip"><h4>♨️ Onsen</h4><p>3 onsen ryokan stays included. Therapeutic for joints. Check water temp first. Use handrails.</p></div>
+      <div class="tip"><h4>🥾 Accessibility</h4><p>Farm Tomita & Shiroi Koibito Park are flat. Ropeways at Mt Moiwa & Hakodate eliminate climbing.</p></div>
+      <div class="tip"><h4>🍽️ Dining</h4><p>Ryokans include dinner & breakfast. Markets have seated dining. Seicomart Hot Chef stores along driving routes for easy hot meals. Avoid late dinner times for elderly.</p></div>
+      <div class="tip"><h4>⏰ Pacing</h4><p>Built-in rest day at Lake Toya. Limit to 2-3 activities per day. Start mornings at 9-10 AM.</p></div>
+      <div class="tip"><h4>🧳 October Weather</h4><p>8-18°C. Pack layers. Comfortable walking shoes essential. Pharmacies (ドラッグストア) everywhere.</p></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>🗾 Route Overview</h2>
+    <p id="routeText">Vancouver ✈ → Tokyo Haneda → ✈ Sapporo → 🚗 Furano → Jozankei → Lake Toya → Hakodate ✈ → Tokyo Haneda ✈ → Vancouver</p>
+    <div style="font-size:12px;padding:6px 10px;background:#ffeaa7;border-radius:6px;margin-top:6px">
+      <b>Driving (6 days):</b> Sapporo→Furano (~2.5h) → Jozankei (~2h) → Lake Toya (~2h) → Hakodate (~3h) → Airport (15min)
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ITINERARY ═══════════ -->
+<div class="pn" id="pn-itinerary">
+  <div class="itin">
+    <div class="day-nav" id="dayNav"></div>
+    <div id="dayContent"></div>
+  </div>
+</div>
+
+<!-- ═══════════ MAP ═══════════ -->
+<div class="pn" id="pn-map">
+  <div class="map-ctrl" id="mapCtrl">
+    <select id="mapDay" onchange="filterMap()"><option value="all">All Days</option></select>
+    <label><input type="checkbox" checked onchange="filterMap()" data-cat="accommodation"> 🏨</label>
+    <label><input type="checkbox" checked onchange="filterMap()" data-cat="poi"> 📍</label>
+    <label><input type="checkbox" checked onchange="filterMap()" data-cat="dining"> 🍽️</label>
+    <label><input type="checkbox" checked onchange="filterMap()" data-cat="activity"> 🎯</label>
+    <label><input type="checkbox" checked onchange="filterMap()" data-cat="snacks"> 🍡</label>
+    <label><input type="checkbox" checked onchange="filterMap()" data-cat="transport"> ✈️</label>
+    <button class="btn btn-sm btn-p" onclick="fitAll()">🔍 Fit All</button>
+  </div>
+  <div class="map-wrap">
+    <div id="map"></div>
+    <div class="legend">
+      <b>Legend</b>
+      <div class="leg-i"><div class="leg-dot" style="background:#2980b9"></div> Accommodation</div>
+      <div class="leg-i"><div class="leg-dot" style="background:#27ae60"></div> POI</div>
+      <div class="leg-i"><div class="leg-dot" style="background:#e67e22"></div> Dining</div>
+      <div class="leg-i"><div class="leg-dot" style="background:#8854ad"></div> Activity</div>
+      <div class="leg-i"><div class="leg-dot" style="background:#d63384"></div> Snacks</div>
+      <div class="leg-i"><div class="leg-dot" style="background:#e74c3c"></div> Transport</div>
+      <div class="leg-i" style="margin-top:3px;border-top:1px solid #eee;padding-top:3px">
+        <div style="width:16px;height:3px;background:#2980b9;border-radius:2px"></div> Driving Route
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CRITIC'S PICKS ═══════════ -->
+<div class="pn" id="pn-picks">
+  <div class="card">
+    <h2>🌟 Critic's Picks — Hokkaido Best</h2>
+    <p style="color:var(--t2);font-size:12px;margin-bottom:10px">Select a category, then choose a day to see 10 curated picks. Click <b>+ Add</b> to insert into itinerary. Items tagged <span class="c-tag fg" style="font-size:10px">Food Guide</span> are from culinary research.</p>
+    <!-- Category Tabs -->
+    <div class="pk-tabs" id="pkTabs">
+      <button class="pk-tab on" data-cat="dining" onclick="selectPickCat('dining')">🍽️ Dining</button>
+      <button class="pk-tab" data-cat="poi" onclick="selectPickCat('poi')">📍 POI</button>
+      <button class="pk-tab" data-cat="activity" onclick="selectPickCat('activity')">🎯 Activities</button>
+      <button class="pk-tab" data-cat="snacks" onclick="selectPickCat('snacks')">🍡 Snacks</button>
+      <button class="pk-tab" data-cat="accommodation" onclick="selectPickCat('accommodation')">🏨 Stays</button>
+    </div>
+    <!-- Day Sub-menu -->
+    <div class="pk-days" id="pkDays"></div>
+    <!-- Picks Grid -->
+    <div class="c-grid" id="picksGrid"></div>
+  </div>
+</div>
+
+<!-- ═══════════ DATA ENTRY ═══════════ -->
+<div class="pn" id="pn-entry">
+  <div class="card">
+    <h2 id="formTitle">➕ Add New Entry</h2>
+    <form id="entryForm" onsubmit="submitEntry(event)">
+      <div class="form-g">
+        <div class="f-field"><label>Day *</label><select id="fd" required onchange="updateActions()"><option value="">Select day…</option></select></div>
+        <div class="f-field"><label>Category *</label>
+          <select id="fc" required onchange="updateActions()">
+            <option value="">Select…</option>
+            <option value="poi">📍 Point of Interest</option>
+            <option value="dining">🍽️ Dining</option>
+            <option value="activity">🎯 Activity</option>
+            <option value="snacks">🍡 Snacks & Drinks</option>
+            <option value="accommodation">🏨 Accommodation</option>
+          </select>
+        </div>
+        <div class="f-field full"><label>Action</label><select id="fa" onchange="onActionChange()"><option value="add">➕ Add New</option></select></div>
+        <div class="f-field"><label>Name *</label><input id="fn" required placeholder="e.g. Daruma Genghis Khan"></div>
+        <div class="f-field"><label>Time</label><input id="ft" placeholder="e.g. 12:00 PM"></div>
+        <div class="f-field full"><label>Address (Google Maps)</label><input id="faddr" placeholder="Full address matching Google Maps"></div>
+        <div class="f-field"><label>Latitude</label><input type="number" step="any" id="flat" placeholder="43.055"></div>
+        <div class="f-field"><label>Longitude</label><input type="number" step="any" id="flng" placeholder="141.350"></div>
+        <div class="f-field full"><label>Description</label><textarea id="fdesc" placeholder="Notes, tips, details…"></textarea></div>
+        <div class="f-field"><label>Elderly-Friendly</label>
+          <select id="feld"><option value="yes">✅ Friendly</option><option value="moderate">⚠️ Moderate</option><option value="no">❌ Not ideal</option></select>
+        </div>
+        <div class="f-field"><label>Elderly Note</label><input id="feldnote" placeholder="Accessibility details…"></div>
+      </div>
+      <br>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button type="submit" class="btn btn-p" id="submitBtn">➕ Add Entry</button>
+        <button type="button" class="btn btn-x" id="cancelBtn" style="display:none" onclick="cancelEdit()">Cancel</button>
+      </div>
+    </form>
+  </div>
+  <div class="card">
+    <h2>📝 Custom Entries (<span id="customCount">0</span>)</h2>
+    <div id="customList"><p style="color:var(--t2)">No custom entries yet. Use the form above or add from Critic's Picks.</p></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+<script>
+/* ════════════════════════════════════════
+   DATE ENGINE
+   ════════════════════════════════════════ */
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let tripFrom='Vancouver', tripDepart=new Date(2024,9,2,12,0,0), tripDays=10;
+
+function tripArrival(){const d=new Date(tripDepart);d.setDate(d.getDate()+1);return d;}
+function dayDate(i){const d=new Date(tripArrival());d.setDate(d.getDate()+i);return d;}
+function lastDate(){return dayDate(tripDays-1);}
+function fmt(d){return`${MON[d.getMonth()]} ${d.getDate()} (${DOW[d.getDay()]})`;}
+function fmtS(d){return`${MON[d.getMonth()]} ${d.getDate()}`;}
+function iso(d){return d.toISOString().split('T')[0];}
+
+function loadCfg(){
+  try{
+    const s=localStorage.getItem('trip_cfg');
+    if(s){const o=JSON.parse(s);tripFrom=o.from||'Vancouver';tripDepart=new Date(o.depart+'T12:00:00');tripDays=o.days||10;}
+  }catch(e){console.warn('Failed to load config:',e);}
+  document.getElementById('cfgFrom').value=tripFrom;
+  document.getElementById('cfgDate').value=iso(tripDepart);
+  document.getElementById('cfgDays').value=tripDays;
+  calcCfg();
+}
+function calcCfg(){
+  const dv=document.getElementById('cfgDate').value;
+  const nv=+document.getElementById('cfgDays').value;
+  if(dv){const parsed=new Date(dv+'T12:00:00');if(!isNaN(parsed))tripDepart=parsed;}
+  if(nv>0&&nv<=60)tripDays=nv;
+  const a=tripArrival(),e=lastDate();
+  document.getElementById('cfgArr').textContent=fmt(a);
+  document.getElementById('cfgEnd').textContent=fmt(e);
+  document.getElementById('cfgNights').textContent=(tripDays-1)+' nights';
+}
+function applyCfg(){
+  tripFrom=document.getElementById('cfgFrom').value.trim()||'Vancouver';
+  calcCfg();
+  try{localStorage.setItem('trip_cfg',JSON.stringify({from:tripFrom,depart:iso(tripDepart),days:tripDays}));}catch(e){}
+  rebuildTrip();
+  toast(`Trip: ${fmtS(tripArrival())}–${fmtS(lastDate())} (${tripDays} days)`);
+}
+
+/* ════════════════════════════════════════
+   TRIP TEMPLATE DATA (10-day Hokkaido)
+   ════════════════════════════════════════ */
+const TMPL=[
+{ti:"Arrival at Haneda",lo:"Tokyo",dr:null,
+ac:{n:"Hotel Metropolitan Haneda",a:"2-6-1 Hanedakuko, Ota-ku, Tokyo 144-0041, Japan",lat:35.5497,lng:139.7793,nt:"Check-in 3PM. Breakfast included.",e:"yes",en:"Connected to airport terminal."},
+po:[{n:"Haneda Airport T3",d:"Get Welcome Suica cards for transit",a:"Hanedakuko, Ota-ku, Tokyo 144-0041, Japan",lat:35.5494,lng:139.7798,t:"7:00 PM",e:"yes",en:"Elevators & escalators throughout"}],
+di:[{n:"Airport Terminal Restaurants",d:"First meal in Japan — many options in Terminal 3",a:"Haneda Airport T3, Ota-ku, Tokyo",lat:35.5494,lng:139.7798,t:"7:30 PM",tp:"Various",e:"yes"}],
+at:[],sn:[],
+et:"Arrival day — keep it simple. Hotel is at the airport so no long transfer needed. Get Suica cards and rest."},
+
+{ti:"Fly to Sapporo",lo:"Sapporo",dr:null,
+ac:{n:"41 PIECES Sapporo",a:"5 Chome-29-2 Minami 2 Jonishi, Chuo-ku, Sapporo 060-0062, Japan",lat:43.0545,lng:141.3488,nt:"Apartment-style hotel, central Sapporo",e:"yes",en:"Central location, close to transit."},
+po:[{n:"New Chitose Airport",d:"Royce Chocolate World, Doraemon Sky Park — all indoor",a:"New Chitose Airport, Bibi, Chitose, Hokkaido 066-0012, Japan",lat:42.7752,lng:141.6925,t:"10:35 AM",e:"yes",en:"Indoor, flat, air-conditioned. Great for all ages."},{n:"JR Sapporo Station",d:"Transfer via JR (37 min). Explore station shops.",a:"Kita 6 Jonishi, Kita-ku, Sapporo, Hokkaido 060-0806, Japan",lat:43.0687,lng:141.3508,t:"1:00 PM",e:"yes",en:"Reserved seats on JR. Station has elevators."}],
+di:[{n:"Sapporo Ramen Republic",d:"8 famous ramen shops on Stellar Place 10F — try the miso ramen! A Sapporo classic with rich, mellow, slightly sweet broth. Also try spicy miso with gyoja garlic.",a:"Stellar Place 10F, Kita 5 Jonishi 2, Chuo-ku, Sapporo, Japan",lat:43.0687,lng:141.3508,t:"12:30 PM",tp:"Ramen",e:"yes"}],
+at:[{n:"New Chitose Airport Shopping",d:"Royce chocolate factory tour (free tasting!), Shiroi Koibito, Rokkatei butter sandwiches. Try Kinotoya cheese tarts baked fresh every 15 min.",a:"New Chitose Airport, Bibi, Chitose, Japan",lat:42.7752,lng:141.6925,t:"11:00 AM",tp:"Indoor",e:"yes"}],
+sn:[{n:"Royce Chocolate Samples",d:"Free chocolate tasting at Royce factory in airport",a:"New Chitose Airport 3F, Chitose, Hokkaido",lat:42.7752,lng:141.6925,t:"11:30 AM",e:"yes"}],
+et:"Flight is only 1.5 hours. Chitose has excellent indoor attractions. Take JR Airport Express to Sapporo (reserved seats available)."},
+
+{ti:"Sapporo Sightseeing",lo:"Sapporo",dr:null,
+ac:{n:"41 PIECES Sapporo",a:"5 Chome-29-2 Minami 2 Jonishi, Chuo-ku, Sapporo 060-0062, Japan",lat:43.0545,lng:141.3488,nt:"Second night — same hotel, no packing",e:"yes"},
+po:[{n:"Shiroi Koibito Park",d:"⭐ Famous white chocolate factory with beautiful European-style gardens",a:"2-11-36 Miyanosawa 2-jo, Nishi-ku, Sapporo 063-0052, Japan",lat:43.0815,lng:141.3073,t:"9:30 AM",e:"yes",en:"Flat grounds, indoor factory tour, cafes. Very accessible.",rc:1},{n:"Mount Moiwa Ropeway",d:"Panoramic night view of Sapporo — optional if energy permits",a:"5-3-7 Fushimi, Chuo-ku, Sapporo 064-0942, Japan",lat:43.0228,lng:141.3285,t:"5:00 PM",e:"moderate",en:"Ropeway + mini cable car. Some standing/waiting."},{n:"Sapporo Beer Museum",d:"Learn about Sapporo beer history. Beer tasting available.",a:"Kita 7-jo Higashi 9, Higashi-ku, Sapporo 065-8633, Japan",lat:43.0697,lng:141.3614,t:"2:00 PM",e:"yes",en:"Indoor museum, accessible."}],
+di:[{n:"Susukino Dining District",d:"⭐ Sapporo's famous food district — try Genghis Khan (Jingisukan) lamb BBQ on a helmet-shaped grill, miso ramen, grilled hokke (overnight-dried mackerel), or crab! Also find chikuwapan at local bakeries.",a:"Minami 4-8, Nishi 2-6, Chuo-ku, Sapporo, Japan",lat:43.0537,lng:141.3540,t:"6:30 PM",tp:"Japanese",e:"yes",rc:1},{n:"Shiroi Koibito Park Cafe",d:"Enjoy white chocolate treats and coffee inside the park",a:"2-11-36 Miyanosawa 2-jo, Nishi-ku, Sapporo, Japan",lat:43.0815,lng:141.3073,t:"11:30 AM",tp:"Cafe",e:"yes"}],
+at:[{n:"Susukino Shopping",d:"Department stores, Don Quijote, drugstores",a:"Minami 4 Nishi 3, Chuo-ku, Sapporo, Japan",lat:43.0537,lng:141.3540,t:"4:00 PM",tp:"Shopping",e:"moderate"}],
+sn:[{n:"Shiroi Koibito Cookies",d:"Buy the famous white chocolate cookies as gifts — freshest at the park",a:"2-11-36 Miyanosawa 2-jo, Nishi-ku, Sapporo, Japan",lat:43.0815,lng:141.3073,t:"11:00 AM",e:"yes"}],
+et:"Pick 2 of 3 attractions for elderly. Morning: Shiroi Koibito Park (flat, accessible). Afternoon rest at hotel. Evening: optional Mount Moiwa ropeway for sunset."},
+
+{ti:"Drive to Furano",lo:"Furano",
+dr:{f:"Sapporo",t:"Furano",km:"~145 km",du:"~2.5 hours",nt:"Pick up rental car at 9AM from Susukino. Drive via Route 38 or Hokkaido Expressway. Stop at a roadside station (道の駅) halfway."},
+ac:{n:"Nozu Hotel",a:"14-38 Kitanominecho, Furano 076-0034, Japan",lat:43.3413,lng:142.3830,nt:"Booked — small, comfortable hotel in town center",e:"yes",en:"Town center location."},
+po:[{n:"Farm Tomita",d:"⭐ Famous lavender and flower fields — beautiful autumn colors in October",a:"15 Kisenkita, Nakafurano-cho, Sorachi-gun 071-0704, Japan",lat:43.3350,lng:142.3770,t:"12:00 PM",e:"yes",en:"Flat paths through flower fields. Gift shop and cafe on site. Free parking close to entrance.",rc:1},{n:"Shirogane Blue Pond",d:"⭐ Stunning blue-colored pond surrounded by birch trees",a:"Shirogane, Biei-cho, Kamikawa-gun 071-0235, Japan",lat:43.3880,lng:142.6840,t:"3:00 PM",e:"moderate",en:"Short walk from parking (~300m gravel path). Some uneven ground. Bring walking stick if needed.",rc:1}],
+di:[{n:"Farm Tomita Cafe",d:"Lavender soft serve and light meals — Hokkaido's dairy is world-class, producing over half of Japan's milk!",a:"15 Kisenkita, Nakafurano-cho, Japan",lat:43.3350,lng:142.3770,t:"12:30 PM",tp:"Cafe",e:"yes"},{n:"Furano Local Restaurants",d:"Try Furano cheese dishes, local curry, or stop at a Seicomart Hot Chef for fresh fried chicken on the go.",a:"Hinodemachi, Furano, Japan",lat:43.3413,lng:142.3830,t:"6:30 PM",tp:"Japanese",e:"yes"}],
+at:[{n:"Scenic Drive Furano-Biei",d:"⭐ Beautiful autumn foliage along the patchwork road",a:"Biei-cho, Kamikawa-gun, Hokkaido, Japan",lat:43.3500,lng:142.4500,t:"2:00 PM",tp:"Driving",e:"yes",rc:1}],
+sn:[{n:"Furano Melon",d:"Try fresh Furano melon at roadside stands — sweet and juicy",a:"Kamifurano-cho, Hokkaido, Japan",lat:43.3400,lng:142.3800,t:"1:00 PM",e:"yes"},{n:"Lavender Ice Cream",d:"Farm Tomita's signature lavender soft serve — must try",a:"15 Kisenkita, Nakafurano-cho, Japan",lat:43.3350,lng:142.3770,t:"12:30 PM",e:"yes"}],
+et:"Pick up car at 9AM. Drive is 2.5 hours — stop at a 道の駅 or Seicomart (Hot Chef fried chicken!) halfway. Visit Farm Tomita first (easier walking), then Blue Pond. Return to Furano for dinner."},
+
+{ti:"Jozankei Onsen",lo:"Jozankei",
+dr:{f:"Furano",t:"Jozankei",km:"~120 km",du:"~2 hours",nt:"Scenic drive through central Hokkaido mountains. Beautiful autumn foliage along the route."},
+ac:{n:"Warm-hearted Inn Furukawa (ぬくもりの宿 ふる川)",a:"4 Chome-353 Jozankei Onsen Nishi, Minami-ku, Sapporo, Hokkaido 061-2303, Japan",lat:42.9671,lng:141.1637,nt:"Traditional onsen ryokan. Dinner & breakfast included. Healing hot springs.",e:"yes",en:"Excellent for elderly — full meal service, therapeutic onsen."},
+po:[{n:"Jozankei Nature Luminarie",d:"⭐ Beautiful light installation in the gorge — evening event",a:"Jozankei Onsen, Minami-ku, Sapporo, Japan",lat:42.9680,lng:141.1640,t:"7:00 PM",e:"moderate",en:"Short walk along illuminated paths. Some uneven terrain. Go slowly.",rc:1},{n:"Jozankei Onsen Town",d:"Hot spring town with free foot baths and autumn colors",a:"Jozankei Onsen, Minami-ku, Sapporo, Japan",lat:42.9671,lng:141.1637,t:"3:00 PM",e:"yes",en:"Free foot baths along main street. Gentle walking area."}],
+di:[{n:"Ryokan Kaiseki Dinner",d:"⭐ Traditional multi-course kaiseki dinner included with stay",a:"4 Chome-353 Jozankei Onsen Nishi, Sapporo",lat:42.9671,lng:141.1637,t:"6:00 PM",tp:"Kaiseki",e:"yes",rc:1}],
+at:[{n:"Capybara Petting Zoo",d:"Visit before checking into Jozankei — family friendly",a:"Jozankei, Minami-ku, Sapporo, Japan",lat:42.9650,lng:141.1600,t:"1:00 PM",tp:"Family",e:"yes"},{n:"Onsen Bathing",d:"⭐ Enjoy the healing hot springs at the ryokan",a:"4 Chome-353 Jozankei Onsen Nishi, Sapporo",lat:42.9671,lng:141.1637,t:"4:00 PM",tp:"Relaxation",e:"yes",rc:1}],
+sn:[{n:"Jozankei Onsen Manju",d:"Traditional steamed buns from the hot spring town bakeries",a:"Jozankei Onsen Higashi, Sapporo, Japan",lat:42.9671,lng:141.1637,t:"3:30 PM",e:"yes"}],
+et:"Perfect elderly-friendly day! Drive from Furano (2 hrs), optional capybara zoo, check in early at ryokan, enjoy onsen, dinner served at ryokan. Evening: gentle walk to Nature Luminarie."},
+
+{ti:"Lake Toya",lo:"Lake Toya",
+dr:{f:"Jozankei",t:"Lake Toya",km:"~100 km",du:"~2 hours",nt:"Optional detour to Noboribetsu Jigokudani (Hell Valley). Adds ~30 min."},
+ac:{n:"The Lake View Toya Nonokaze Resort",a:"29-1 Toyako Onsen, Toyako-cho, Abuta-gun, Hokkaido 049-5721, Japan",lat:42.5693,lng:140.8420,nt:"⭐ Lakeside luxury resort with onsen. Fireworks at 20:45-21:05!",e:"yes",en:"Luxury resort. Onsen with lake views. Watch fireworks from the hotel room!"},
+po:[{n:"Noboribetsu Jigokudani (Hell Valley)",d:"Volcanic valley with steaming vents — en route stop",a:"Noboribetsu, Hokkaido 059-0551, Japan",lat:42.4932,lng:141.1469,t:"11:00 AM",e:"moderate",en:"Boardwalk paths but some slopes. Main viewing area is accessible.",rc:1},{n:"Lake Toya Promenade",d:"Beautiful caldera lake with Mount Usu views — flat walking path",a:"Toyako Onsen, Toyako-cho, Japan",lat:42.5700,lng:140.8440,t:"3:00 PM",e:"yes",en:"Flat, paved lakeside promenade. Beautiful views."}],
+di:[{n:"Nonokaze Resort Dinner",d:"⭐ Hotel dinner included — outstanding local Hokkaido cuisine",a:"29-1 Toyako Onsen, Toyako-cho, Japan",lat:42.5693,lng:140.8420,t:"6:30 PM",tp:"Japanese",e:"yes",rc:1}],
+at:[{n:"Lake Toya Fireworks 🎆",d:"⭐ Nightly fireworks display 20:45-21:05 visible from hotel!",a:"Toyako Onsen, Toyako-cho, Japan",lat:42.5693,lng:140.8420,t:"8:45 PM",tp:"Show",e:"yes",rc:1},{n:"Resort Onsen",d:"Multiple baths with panoramic lake views",a:"29-1 Toyako Onsen, Toyako-cho, Japan",lat:42.5693,lng:140.8420,t:"4:00 PM",tp:"Relaxation",e:"yes"}],
+sn:[{n:"Toyako Onsen Sweets",d:"Local confections and sweets from onsen town shops",a:"Toyako Onsen, Toyako-cho, Japan",lat:42.5690,lng:140.8430,t:"3:30 PM",e:"yes"}],
+et:"Optional Jigokudani stop (assess energy level — main boardwalk is manageable but skip longer trails). Lake Toya resort is luxurious and relaxing. Fireworks visible from hotel — no need to go outside!"},
+
+{ti:"Rest Day — Lake Toya",lo:"Lake Toya",dr:null,
+ac:{n:"The Lake View Toya Nonokaze Resort",a:"29-1 Toyako Onsen, Toyako-cho, Abuta-gun, Hokkaido 049-5721, Japan",lat:42.5693,lng:140.8420,nt:"Second night. Another chance for fireworks!",e:"yes",en:"Rest day — enjoy resort facilities at leisure."},
+po:[{n:"Toyako Promenade",d:"Scenic lakeside walking path with sculptures",a:"Toyako Onsen, Toyako-cho, Japan",lat:42.5700,lng:140.8440,t:"10:00 AM",e:"yes",en:"Flat, paved path. Take it slow."}],
+di:[{n:"Resort Breakfast & Dinner",d:"Hotel meals included — Hokkaido seasonal cuisine",a:"29-1 Toyako Onsen, Toyako-cho, Japan",lat:42.5693,lng:140.8420,t:"8:00 AM",tp:"Japanese",e:"yes"},{n:"Toyako Town Cafes",d:"Light lunch options in the onsen town",a:"Toyako Onsen, Toyako-cho, Japan",lat:42.5690,lng:140.8430,t:"12:00 PM",tp:"Cafe",e:"yes"}],
+at:[{n:"Lake Toya Boat Cruise",d:"⭐ Sightseeing boat on caldera lake ~30 min. Visit Nakajima island.",a:"Toyako Onsen, Toyako-cho, Japan",lat:42.5693,lng:140.8420,t:"11:00 AM",tp:"Cruise",e:"yes",rc:1},{n:"Resort Onsen",d:"Spend leisurely time in the hot springs",a:"29-1 Toyako Onsen, Toyako-cho, Japan",lat:42.5693,lng:140.8420,t:"3:00 PM",tp:"Relaxation",e:"yes"},{n:"Fireworks Night 2 🎆",d:"20:45-21:05 — enjoy again from lakeside or hotel!",a:"Toyako Onsen, Toyako-cho, Japan",lat:42.5693,lng:140.8420,t:"8:45 PM",tp:"Show",e:"yes"}],
+sn:[{n:"Milk Kobo Cream Puffs",d:"Famous farm-fresh cream puffs near Lake Toya — worth the short drive",a:"888-1 Sobetsu-cho, Usu-gun, Hokkaido 052-0101, Japan",lat:42.6000,lng:140.7800,t:"2:30 PM",e:"yes"}],
+et:"🌟 REST DAY — Critical for elderly travelers! No driving today. Sleep in, enjoy hotel breakfast, gentle lakeside walk, optional boat cruise, afternoon onsen, dinner at hotel, fireworks again. Recharge for the longer drive tomorrow."},
+
+{ti:"Drive to Hakodate",lo:"Hakodate",
+dr:{f:"Lake Toya",t:"Hakodate",km:"~170 km",du:"~3 hours",nt:"Longest drive of the trip. Take Hokkaido Expressway. Plan a rest stop at Onuma area — beautiful lake park."},
+ac:{n:"Chikuba Shinyotei Ryokan",a:"1-3-14 Yunokawa-cho, Hakodate, Hokkaido 042-0932, Japan",lat:41.7687,lng:140.7890,nt:"Traditional ryokan with dinner & breakfast. Ask about bed availability (vs futon).",e:"yes",en:"Dinner & breakfast included. Yunokawa onsen area."},
+po:[{n:"Hakodate Morning Market (Asaichi)",d:"⭐ Famous seafood market — squid, crab, fresh donburi",a:"9-19 Wakamatsu-cho, Hakodate, Hokkaido 040-0063, Japan",lat:41.7730,lng:140.7270,t:"3:00 PM",e:"yes",en:"Indoor market with stalls. Seated restaurants inside. Flat floors.",rc:1},{n:"Goryokaku Tower",d:"Star-shaped Western-style fort with observation tower",a:"43-9 Goryokaku-cho, Hakodate, Hokkaido 040-0001, Japan",lat:41.7967,lng:140.7567,t:"If time permits",e:"yes",en:"Tower has elevator. Park grounds are flat."}],
+di:[{n:"Morning Market Seafood Donburi",d:"⭐ Premium kaisendon — uni, ikura, crab, scallops, even abalone. Hokkaido's cold northern seas produce the sweetest seafood in Japan.",a:"9-19 Wakamatsu-cho, Hakodate, Japan",lat:41.7730,lng:140.7270,t:"3:30 PM",tp:"Seafood",e:"yes",rc:1},{n:"Lucky Pierrot Bay Area",d:"⭐ Famous Hakodate-only burger chain! Chinese chicken burger is iconic.",a:"23-18 Suehiro-cho, Hakodate, Hokkaido 040-0053, Japan",lat:41.7660,lng:140.7160,t:"5:30 PM",tp:"Burgers",e:"yes",rc:1}],
+at:[{n:"Hakodate Waterfront Walk",d:"Historic red brick warehouses along the beautiful bay",a:"14-12 Suehiro-cho, Hakodate, Japan",lat:41.7660,lng:140.7240,t:"4:30 PM",tp:"Walking",e:"yes"}],
+sn:[{n:"Hakodate Squid Snacks",d:"Dried squid and seafood snacks at morning market",a:"9-19 Wakamatsu-cho, Hakodate, Japan",lat:41.7730,lng:140.7270,t:"3:15 PM",e:"yes"}],
+et:"Longest drive (~3 hours). Leave after breakfast. Stop at Onuma Quasi-National Park or a service area halfway. Arrive early afternoon. Rest at ryokan, then gentle evening walk to morning market area or Lucky Pierrot for dinner."},
+
+{ti:"Hakodate Sightseeing",lo:"Hakodate",dr:null,
+ac:{n:"Chikuba Shinyotei Ryokan",a:"1-3-14 Yunokawa-cho, Hakodate, Japan",lat:41.7687,lng:140.7890,nt:"Second night — same comfortable ryokan",e:"yes"},
+po:[{n:"Hakodate Morning Market",d:"Go early for the freshest seafood! Open from 5-6 AM.",a:"9-19 Wakamatsu-cho, Hakodate, Japan",lat:41.7730,lng:140.7270,t:"7:00 AM",e:"yes",en:"Best visited early morning. Seated dining available."},{n:"Mount Hakodate Ropeway",d:"⭐ One of Japan's top 3 night views — absolutely stunning!",a:"19-7 Motomachi, Hakodate, Hokkaido 040-0054, Japan",lat:41.7580,lng:140.7020,t:"5:00 PM",e:"yes",en:"Ropeway goes directly to summit. Observation deck has benches. Dress warmly — cold and windy at top!",rc:1},{n:"Motomachi District",d:"Historic Western-style buildings, churches, Old Public Hall",a:"Motomachi, Hakodate, Hokkaido 040-0054, Japan",lat:41.7650,lng:140.7100,t:"10:00 AM",e:"moderate",en:"Hilly area with slopes. Consider driving and parking near the top to avoid walking uphill."}],
+di:[{n:"Market Seafood Breakfast",d:"⭐ Premium kaisendon for breakfast — the Hakodate way. Try the 3-color donburi (uni, ikura, crab) or splurge on abalone & fatty tuna.",a:"9-19 Wakamatsu-cho, Hakodate, Japan",lat:41.7730,lng:140.7270,t:"7:30 AM",tp:"Seafood",e:"yes",rc:1},{n:"Ryokan Farewell Dinner",d:"Final kaiseki dinner at the ryokan — savor every course",a:"1-3-14 Yunokawa-cho, Hakodate",lat:41.7687,lng:140.7890,t:"6:30 PM",tp:"Kaiseki",e:"yes"}],
+at:[{n:"Goryokaku Tower",d:"Elevator observation deck over the star-shaped fort",a:"43-9 Goryokaku-cho, Hakodate, Japan",lat:41.7967,lng:140.7567,t:"11:00 AM",tp:"Sightseeing",e:"yes"},{n:"Mount Hakodate Night View",d:"⭐ Take the ropeway for breathtaking sunset/night views",a:"19-7 Motomachi, Hakodate, Japan",lat:41.7580,lng:140.7020,t:"5:00 PM",tp:"Sightseeing",e:"yes",rc:1}],
+sn:[{n:"Hakodate Pastries",d:"Try local pastry shops in the Motomachi area",a:"Motomachi, Hakodate, Japan",lat:41.7650,lng:140.7100,t:"10:30 AM",e:"yes"}],
+et:"Last full day — savor it! Morning: market breakfast. Midday: gentle Motomachi walk (drive to upper area to avoid hills) or Goryokaku tower. Afternoon: rest. Evening: Mount Hakodate ropeway for night view."},
+
+{ti:"Departure",lo:"Hakodate Airport",
+dr:{f:"Hakodate",t:"Hakodate Airport",km:"~10 km",du:"~15 min",nt:"Return Toyota rental car at Hakodate Airport Shop by 9:00 AM. Address: 569-17 Takamatsu-cho, Hakodate-shi, Hokkaido 042-0952"},
+ac:null,
+po:[{n:"Hakodate Airport",d:"Return rental car and catch flight. Airport has souvenir shops for last-minute omiyage.",a:"511 Takamatsu-cho, Hakodate, Hokkaido 042-0952, Japan",lat:41.7700,lng:140.8220,t:"9:00 AM",e:"yes",en:"Small airport, very easy to navigate."}],
+di:[{n:"Airport Last Meal",d:"Last meal in Hokkaido! Try ebisoba ramen (shrimp broth), airport bento, or grab Seicomart Hot Chef fried chicken for the road.",a:"511 Takamatsu-cho, Hakodate, Japan",lat:41.7700,lng:140.8220,t:"10:00 AM",tp:"Various",e:"yes"}],
+at:[],
+sn:[{n:"Airport Omiyage Shopping",d:"Last chance for Hokkaido souvenirs — Shiroi Koibito, Royce, Rokkatei!",a:"511 Takamatsu-cho, Hakodate, Japan",lat:41.7700,lng:140.8220,t:"9:30 AM",e:"yes"}],
+et:"Departure day. Pack the night before. Short 15-minute drive to airport. Return car by 9AM. Allow plenty of time for the car return process."}
+];
+
+// ═══ BUILD DYNAMIC TRIP ═══
+function buildTrip(){
+  const arr=[];
+  for(let i=0;i<tripDays;i++){
+    const d=dayDate(i);
+    const tmpl=i<TMPL.length?TMPL[i]:{ti:"Free Day",lo:"TBD",dr:null,ac:null,po:[],di:[],at:[],sn:[],et:"Open day — add your own plans using the Entry tab!"};
+    arr.push({day:i+1,dt:fmt(d),ti:tmpl.ti,lo:tmpl.lo,dr:tmpl.dr,ac:tmpl.ac,po:tmpl.po||[],di:tmpl.di||[],at:tmpl.at||[],sn:tmpl.sn||[],et:tmpl.et||''});
+  }
+  return arr;
+}
+let TRIP=buildTrip();
+
+function rebuildTrip(){
+  TRIP=buildTrip();
+  document.getElementById('stDays').textContent=tripDays;
+  if(pickDay>=TRIP.length)pickDay=0;
+  renderFlight();
+  populateDaySelect();
+  populateMapDayFilter();
+  renderPickDays();
+  refreshAll();
+}
+
+// ═══ Continue with critic's picks, state management, all UI rendering, map, PDF... ═══
+// (Due to the immense size, I'll provide the complete functional core below)
+
+/* ════════════════════════════════════════
+   CRITIC'S PICKS DATABASE (50 items)
+   ════════════════════════════════════════ */
+const PICKS=[
+// DINING (10)
+{id:'d1',cat:'dining',n:"Daruma Genghis Khan (だるま)",area:"Sapporo",d:"#1 Jingisukan since 1954 — cook lamb yourself on a convex helmet-shaped grill. Michelin Bib Gourmand. Queue expected but legendary.",a:"Minami 5 Nishi 4, Crystal Bldg 1F, Chuo-ku, Sapporo 064-0805, Japan",lat:43.0518,lng:141.3520,stars:5,tags:["Michelin Bib","Since 1954","Jingisukan"],eld:"moderate",t:"6:00 PM",days:[1,2],web:"https://www.tripadvisor.com/Restaurant_Review-g298560-d3670517-Reviews-Daruma_Honten-Sapporo_Hokkaido.html"},
+{id:'d2',cat:'dining',n:"Ramen Shingen (信玄)",area:"Sapporo",d:"Award-winning miso ramen. Rich complex broth. Top 3 Hokkaido for a decade.",a:"Minami 6 Nishi 8, Chuo-ku, Sapporo 064-0806, Japan",lat:43.0505,lng:141.3470,stars:5,tags:["Award Winner","Miso Ramen"],eld:"yes",t:"11:30 AM",days:[1,2],web:"https://www.tripadvisor.com/Restaurant_Review-g298560-d3197197-Reviews-Shingen-Sapporo_Hokkaido.html"},
+{id:'d3',cat:'dining',n:"Suage Soup Curry",area:"Sapporo",d:"Critics' #1 soup curry. Paripari chicken in 20-spice broth. Sapporo original! Ask about 'Milk Style' — uses rich Hokkaido milk for extra creaminess.",a:"Minami 4 Nishi 5, B1F, Chuo-ku, Sapporo 064-0804, Japan",lat:43.0530,lng:141.3510,stars:4,tags:["Sapporo Specialty","Milk Style","Paripari Chicken"],eld:"yes",t:"12:00 PM",days:[1,2],web:"https://www.tripadvisor.com/Restaurant_Review-g298560-d3521330-Reviews-Suage-Sapporo_Hokkaido.html"},
+{id:'d4',cat:'dining',n:"Uni Murakami (うにむらかみ)",area:"Hakodate",d:"Premium sea urchin specialist. Tabelog Gold. Life-changing uni don.",a:"1-2 Otemachi, Hakodate 040-0064, Japan",lat:41.7725,lng:140.7275,stars:5,tags:["Tabelog Gold","Sea Urchin"],eld:"yes",t:"12:00 PM",days:[7,8],web:"https://www.tripadvisor.com/Restaurant_Review-g298151-d3530107-Reviews-Uni_Murakami_Hakodate_Main-Hakodate_Hokkaido.html"},
+{id:'d5',cat:'dining',n:"Kikuyo Shokudo (きくよ食堂)",area:"Hakodate",d:"Iconic since 1956. Famous 3-color kaisendon: uni, ikura, crab. The cold northern seas around Hokkaido make this seafood exceptionally fresh and sweet.",a:"11-15 Wakamatsu-cho, Hakodate 040-0063, Japan",lat:41.7728,lng:140.7265,stars:4,tags:["Since 1956","3-Color Kaisendon"],eld:"yes",t:"7:00 AM",days:[7,8],web:"https://www.tripadvisor.com/Restaurant_Review-g298151-d1661817-Reviews-Kikuyo_Shokudo-Hakodate_Hokkaido.html"},
+{id:'d6',cat:'dining',n:"Kumagera (くまげら)",area:"Furano",d:"Venison stew, local wagyu. Rustic log-cabin atmosphere since 1980s.",a:"5-22 Hinodemachi, Furano 076-0025, Japan",lat:43.3415,lng:142.3835,stars:4,tags:["Venison","Wagyu","Local Legend"],eld:"yes",t:"6:30 PM",days:[3],web:"https://www.tripadvisor.com/Restaurant_Review-g1120600-d1693547-Reviews-Kumagera-Furano_Hokkaido.html"},
+{id:'d7',cat:'dining',n:"Otaru Masazushi (政寿司)",area:"Otaru",d:"Premier sushi since 1938. 3rd-generation master. Omakase recommended.",a:"1-1-1 Hanazono, Otaru 047-0024, Japan",lat:43.1938,lng:140.9941,stars:5,tags:["Since 1938","Omakase"],eld:"yes",t:"12:00 PM",days:[1,2],web:"https://www.tripadvisor.com/Restaurant_Review-g298143-d1168599-Reviews-Masazushi_Honten-Otaru_Hokkaido.html"},
+{id:'d8',cat:'dining',n:"Boyotei (望羊蹄)",area:"Lake Toya",d:"Hamburg steak since 1946 with Mt Yotei views. Historic institution.",a:"36-12 Toyako Onsen, Toyako-cho, Japan",lat:42.5680,lng:140.8410,stars:4,tags:["Since 1946","Mountain View"],eld:"yes",t:"12:00 PM",days:[5,6],web:"https://www.tripadvisor.com/Restaurant_Review-g1120649-d1373534-Reviews-Boyotei-Toyako_cho_Abuta_gun_Hokkaido.html"},
+{id:'d9',cat:'dining',n:"Ebisoya Ramen",area:"Chitose Airport",d:"Concentrated shrimp-flavored broth (ebisoba) topped with shrimp tempura bits — a unique Hokkaido ramen style. Perfect first or last meal at the airport.",a:"New Chitose Airport 3F, Chitose, Japan",lat:42.7754,lng:141.6927,stars:4,tags:["Ebisoba","Shrimp Ramen","Airport"],eld:"yes",t:"11:00 AM",days:[1,9],web:"https://www.tripadvisor.com/Restaurant_Review-g298144-d6601802-Reviews-Hokkaido_Ramen_Dojo-Chitose_Hokkaido.html"},
+{id:'d10',cat:'dining',n:"Hasegawa Store Yakitori",area:"Hakodate",d:"Cult-favorite pork yakitori bento ¥500. Unique Hakodate specialty.",a:"12-11 Wakamatsu-cho, Hakodate 040-0063, Japan",lat:41.7732,lng:140.7262,stars:4,tags:["Cult Favorite","¥500"],eld:"yes",t:"11:00 AM",days:[7,8],web:"https://www.tripadvisor.com/Restaurant_Review-g298151-d1661823-Reviews-Hasegawa_Store_Bay_Area-Hakodate_Hokkaido.html"},
+// POI (10)
+{id:'p1',cat:'poi',n:"Otaru Canal (小樽運河)",area:"Otaru",d:"Iconic canal with gas lamps. Stunning at dusk. Stone warehouses now cafes & shops.",a:"Minato-machi, Otaru 047-0007, Japan",lat:43.1970,lng:140.9940,stars:5,tags:["Iconic","Photo Spot","Gas Lamps"],eld:"yes",t:"3:00 PM",days:[1,2],web:"https://www.japan-guide.com/e/e6706.html"},
+{id:'p2',cat:'poi',n:"Onuma National Park",area:"En route to Hakodate",d:"Scenic lake with Mt Komagatake. Perfect rest stop. October red foliage.",a:"Onuma-cho, Nanae-cho 041-1354, Japan",lat:41.9937,lng:140.6677,stars:4,tags:["Rest Stop","Autumn Foliage"],eld:"yes",t:"11:00 AM",days:[7],web:"https://www.japan-guide.com/e/e6730.html"},
+{id:'p3',cat:'poi',n:"Odori Park & TV Tower",area:"Sapporo",d:"1.5 km park in city center. TV Tower 90m observation. Autumn colors.",a:"Odori Nishi, Chuo-ku, Sapporo, Japan",lat:43.0590,lng:141.3564,stars:4,tags:["Free Park","Autumn"],eld:"yes",t:"10:00 AM",days:[1,2],web:"https://www.japan-guide.com/e/e5302.html"},
+{id:'p4',cat:'poi',n:"Nijo Market (二条市場)",area:"Sapporo",d:"Sapporo's seafood market since 1903. Less crowded than Hakodate.",a:"Minami 3-jo Higashi 1, Sapporo, Japan",lat:43.0560,lng:141.3570,stars:4,tags:["Since 1903","Seafood"],eld:"yes",t:"10:00 AM",days:[1,2],web:"https://www.tripadvisor.com/Attraction_Review-g298560-d1373615-Reviews-Nijo_Market-Sapporo_Hokkaido.html"},
+{id:'p5',cat:'poi',n:"Hokkaido Shrine",area:"Sapporo",d:"Major shrine in forested Maruyama Park. Autumn colors in October.",a:"474 Miyagaoka, Chuo-ku, Sapporo, Japan",lat:43.0546,lng:141.3094,stars:4,tags:["Spiritual","Forest"],eld:"moderate",t:"9:00 AM",days:[1,2],web:"https://www.japan-guide.com/e/e5306.html"},
+{id:'p6',cat:'poi',n:"Kanemori Red Brick",area:"Hakodate",d:"Historic 1909 warehouses — shopping, dining, beer halls by the harbor.",a:"14-12 Suehiro-cho, Hakodate, Japan",lat:41.7660,lng:140.7240,stars:4,tags:["Historic 1909","Waterfront"],eld:"yes",t:"3:00 PM",days:[7,8],web:"https://www.japan-guide.com/e/e5354.html"},
+{id:'p7',cat:'poi',n:"Shikisai-no-Oka",area:"Biei (near Furano)",d:"Rolling flower hills with panoramic views. Alpaca farm. Cart ride available.",a:"Shinsei 3, Biei-cho, Kamikawa-gun, Japan",lat:43.5309,lng:142.4665,stars:4,tags:["Panoramic","Alpacas"],eld:"yes",t:"10:00 AM",days:[3],web:"https://www.shikisainooka.jp/en/"},
+{id:'p8',cat:'poi',n:"Ningle Terrace",area:"Furano",d:"Enchanting forest craft village with boardwalk paths. Magic in evening.",a:"Nakagoryo, Furano, Japan",lat:43.3246,lng:142.3550,stars:4,tags:["Forest Village","Crafts"],eld:"moderate",t:"4:00 PM",days:[3],web:"https://www.snowtomamu.jp/summer/en/ningle/"},
+{id:'p9',cat:'poi',n:"Usuzan Ropeway",area:"Lake Toya",d:"Ropeway to Mt Usu. Crater views. 2000 eruption remains. Panoramic.",a:"184-5 Sobetsu Onsen-cho, Japan",lat:42.5430,lng:140.8380,stars:4,tags:["Volcano","Panorama"],eld:"yes",t:"10:00 AM",days:[5,6],web:"https://usuzan.hokkaido.jp/en/"},
+{id:'p10',cat:'poi',n:"Tanukikoji Arcade",area:"Sapporo",d:"200-year covered shopping arcade. 7 blocks. Tax-free shops. Rain-proof.",a:"Minami 2-3, Nishi 1-7, Sapporo, Japan",lat:43.0555,lng:141.3530,stars:3,tags:["Covered","Tax-Free"],eld:"yes",t:"2:00 PM",days:[1,2],web:"https://www.tripadvisor.com/Attraction_Review-g298560-d1373543-Reviews-Tanukikoji_Shopping_Street-Sapporo_Hokkaido.html"},
+// ACTIVITIES (10)
+{id:'a1',cat:'activity',n:"Otaru Canal Cruise",area:"Otaru",d:"40-min guided boat. Twilight option with gas lamp reflections.",a:"5-4 Minato-machi, Otaru, Japan",lat:43.1965,lng:140.9938,stars:4,tags:["40 min","Twilight"],eld:"yes",t:"3:00 PM",tp:"Cruise",days:[1,2],web:"https://www.tripadvisor.com/Attraction_Review-g298143-d7185894-Reviews-Otaru_Canal_Cruise-Otaru_Hokkaido.html"},
+{id:'a2',cat:'activity',n:"Hakodate Bay Cruise",area:"Hakodate",d:"30-min harbor cruise with city views. Glass-bottom option.",a:"14-17 Suehiro-cho, Hakodate, Japan",lat:41.7655,lng:140.7235,stars:4,tags:["30 min","Harbor"],eld:"yes",t:"2:00 PM",tp:"Cruise",days:[7,8],web:"https://www.tripadvisor.com/Attraction_Review-g298151-d12937685-Reviews-Blue_Moon-Hakodate_Hokkaido.html"},
+{id:'a3',cat:'activity',n:"Noboribetsu Bear Park",area:"Noboribetsu",d:"100+ brown bears via ropeway. Ainu culture museum. Feed bears.",a:"224 Noboribetsu Onsen-cho, Japan",lat:42.4940,lng:141.1510,stars:3,tags:["Ropeway","Bears"],eld:"moderate",t:"10:00 AM",tp:"Zoo",days:[5],web:"https://bearpark.jp/en/"},
+{id:'a4',cat:'activity',n:"Lake Toya Boat Cruise",area:"Lake Toya",d:"50-min caldera cruise. Nakajima island. Volcano views.",a:"Toyako Onsen, Toyako-cho, Japan",lat:42.5693,lng:140.8423,stars:4,tags:["50 min","Volcano Views"],eld:"yes",t:"11:00 AM",tp:"Cruise",days:[5,6],web:"https://www.tripadvisor.com/Attraction_Review-g1120649-d1373546-Reviews-Toyako_Kisen-Toyako_cho_Abuta_gun_Hokkaido.html"},
+{id:'a5',cat:'activity',n:"Furano Cheese Factory",area:"Furano",d:"Hands-on cheese & butter workshop 60 min. Make your own! Free tasting.",a:"Nakago-ku, Furano, Japan",lat:43.3270,lng:142.3720,stars:4,tags:["Hands-on","60 min"],eld:"yes",t:"10:00 AM",tp:"Workshop",days:[3],web:"https://www.furano.ne.jp/furano-cheese/en/"},
+{id:'a6',cat:'activity',n:"Hakodate Tropical Garden",area:"Hakodate",d:"Monkeys bathing in hot springs! October is the start of monkey onsen season.",a:"3-1-15 Yunokawa-cho, Hakodate, Japan",lat:41.7695,lng:140.7945,stars:4,tags:["Monkey Onsen","Unique"],eld:"yes",t:"10:00 AM",tp:"Zoo",days:[7,8],web:"https://www.tripadvisor.com/Attraction_Review-g298151-d1373507-Reviews-Hakodate_Tropical_Botanical_Garden-Hakodate_Hokkaido.html"},
+{id:'a7',cat:'activity',n:"Sapporo TV Tower",area:"Sapporo",d:"90m observation deck. Spectacular sunset views over Odori Park.",a:"Odori Nishi 1, Sapporo, Japan",lat:43.0608,lng:141.3568,stars:3,tags:["City View","¥1000"],eld:"yes",t:"5:00 PM",tp:"View",days:[1,2],web:"https://www.tv-tower.co.jp/en/"},
+{id:'a8',cat:'activity',n:"Toyako E-bike Cycling",area:"Lake Toya",d:"Flat 8km lakeside path. E-bike rentals. Mountain and lake views.",a:"Toyako Onsen, Toyako-cho, Japan",lat:42.5695,lng:140.8425,stars:4,tags:["E-bike","Flat"],eld:"moderate",t:"10:00 AM",tp:"Cycling",days:[5,6],web:"https://www.tripadvisor.com/Attraction_Review-g1120649-d25488932-Reviews-Toya_Guide_Center-Toyako_cho_Abuta_gun_Hokkaido.html"},
+{id:'a9',cat:'activity',n:"Jozankei Canoe",area:"Jozankei",d:"90-min gentle river canoe through autumn foliage gorge. Guided.",a:"Jozankei Onsen, Sapporo, Japan",lat:42.9660,lng:141.1620,stars:4,tags:["90 min","Foliage"],eld:"moderate",t:"10:00 AM",tp:"Outdoor",days:[4],web:"https://jozankei.jp/en/"},
+{id:'a10',cat:'activity',n:"Otaru Music Box Museum",area:"Otaru",d:"Thousands of music boxes. Make your own custom one (30 min workshop).",a:"4-1 Sumiyoshi-cho, Otaru, Japan",lat:43.1928,lng:140.9972,stars:4,tags:["Workshop","Romantic"],eld:"yes",t:"2:00 PM",tp:"Cultural",days:[1,2],web:"https://www.otaru-orgel.co.jp/en/"},
+// SNACKS (10)
+{id:'s1',cat:'snacks',n:"LeTAO Double Fromage",area:"Otaru",d:"#1 Otaru cheesecake. Double-layer: baked + rare. Rooftop cafe with views.",a:"7-16 Sakai-machi, Otaru, Japan",lat:43.1930,lng:140.9970,stars:5,tags:["#1 Otaru","Cheesecake"],eld:"yes",t:"2:00 PM",days:[1,2],web:"https://www.letao.jp/en/"},
+{id:'s2',cat:'snacks',n:"Rokkatei Butter Sandwich",area:"Airports & shops",d:"Hokkaido's #1 souvenir sweet. Rum-raisin butter cream cookie.",a:"New Chitose Airport 2F, Japan",lat:42.7752,lng:141.6925,stars:4,tags:["#1 Souvenir"],eld:"yes",t:"Any",days:[1,9],web:"https://www.rokkatei.co.jp/en/"},
+{id:'s3',cat:'snacks',n:"Kinotoya Cheese Tart",area:"Chitose Airport",d:"Freshly baked every 15 min. Eat warm — molten cheese filling!",a:"New Chitose Airport 2F, Japan",lat:42.7750,lng:141.6923,stars:4,tags:["Baked Fresh","Warm"],eld:"yes",t:"Any",days:[1,9],web:"https://www.kinotoya.com/en/"},
+{id:'s4',cat:'snacks',n:"Sapporo Parfait Alley",area:"Sapporo · Susukino",d:"Late-night parfait culture! Elaborate Hokkaido cream parfaits after dinner.",a:"Minami 3-4, Nishi 5-6, Sapporo, Japan",lat:43.0535,lng:141.3495,stars:4,tags:["Late Night","Instagram"],eld:"yes",t:"9:30 PM",days:[1,2],web:"https://www.tripadvisor.com/Attraction_Review-g298560-d15558048-Reviews-Parfaiteria_Mil-Sapporo_Hokkaido.html"},
+{id:'s5',cat:'snacks',n:"Milk Kobo Cream Puffs",area:"Near Lake Toya",d:"Farm-fresh cream puffs. Also gelato & drinking yogurt. Beautiful farm.",a:"888-1 Sobetsu-cho, Usu-gun, Japan",lat:42.6000,lng:140.7800,stars:4,tags:["Farm Fresh","Gelato"],eld:"yes",t:"2:00 PM",days:[5,6],web:"https://www.milk-kobo.com/"},
+{id:'s6',cat:'snacks',n:"Royce Nama Chocolate",area:"Chitose Airport",d:"Premium fresh-cream chocolate. Factory tour at airport. Keep cold!",a:"New Chitose Airport 3F, Japan",lat:42.7755,lng:141.6928,stars:5,tags:["Premium","Factory Tour"],eld:"yes",t:"11:00 AM",days:[1,9],web:"https://www.royce.com/contents/english/"},
+{id:'s7',cat:'snacks',n:"Snaffle's Cheese Omelet",area:"Hakodate",d:"Fluffy soufflé cheesecake that wobbles! Hakodate's signature sweet.",a:"Wakamatsu-cho, Hakodate, Japan",lat:41.7735,lng:140.7275,stars:4,tags:["Soufflé","Hakodate Icon"],eld:"yes",t:"Any",days:[7,8],web:"https://www.snaffles.jp/en/"},
+{id:'s8',cat:'snacks',n:"Furano Wine & Juice",area:"Furano",d:"Hilltop winery with free tasting. Non-drinkers: try the 100% grape juice.",a:"Shimizuyama, Furano, Japan",lat:43.3340,lng:142.3680,stars:4,tags:["Free Tasting","Views"],eld:"yes",t:"2:00 PM",days:[3],web:"https://www.furanowine.jp/"},
+{id:'s9',cat:'snacks',n:"Yubari Melon Jelly",area:"Airports",d:"Premium Yubari King melon jelly. Elegant gift box. Available everywhere.",a:"New Chitose Airport, Japan",lat:42.7748,lng:141.6920,stars:3,tags:["Premium Gift"],eld:"yes",t:"Any",days:[1,9],web:"https://www.new-chitose-airport.jp/en/spend/shop/s112.html"},
+{id:'s10',cat:'snacks',n:"Shiroi Koibito Cookie",area:"Sapporo / Airport",d:"THE Hokkaido souvenir since 1976 — two thin butter biscuits with white chocolate sandwiched inside. Buy fresh at the park factory!",a:"2-11-36 Miyanosawa, Sapporo, Japan",lat:43.0815,lng:141.3073,stars:4,tags:["Since 1976","#1 Cookie","White Chocolate"],eld:"yes",t:"11:00 AM",days:[2],web:"https://www.shiroikoibitopark.jp/en/"},
+// ACCOMMODATION (10)
+{id:'ac1',cat:'accommodation',n:"JR Tower Hotel Nikko Sapporo",area:"Sapporo",d:"Connected to JR Sapporo Station. 22F+ rooms. Spa & onsen on 22F. Perfect for elderly.",a:"Kita 5 Nishi 2, Chuo-ku, Sapporo, Japan",lat:43.0688,lng:141.3506,stars:5,tags:["Station Direct","Spa","Premium"],eld:"yes",t:"",days:[1,2],web:"https://www.jrhotels.co.jp/tower/en/"},
+{id:'ac2',cat:'accommodation',n:"Hotel Mystays Sapporo Susukino",area:"Sapporo",d:"Excellent value in Susukino. Kitchenette rooms. Near restaurants & subway.",a:"Minami 7 Nishi 3, Chuo-ku, Sapporo, Japan",lat:43.0490,lng:141.3530,stars:3,tags:["Value","Kitchenette"],eld:"yes",t:"",days:[1,2],web:"https://www.mystays.com/hotel/hokkaido/hotel-mystays-sapporo-susukino/"},
+{id:'ac3',cat:'accommodation',n:"Furano Natulux Hotel",area:"Furano",d:"Modern hotel near Furano station. Onsen bath. Good breakfast. Clean rooms.",a:"1-35 Asahi-machi, Furano, Japan",lat:43.3420,lng:142.3835,stars:4,tags:["Onsen","Modern"],eld:"yes",t:"",days:[3],web:"https://www.natulux.com/en/"},
+{id:'ac4',cat:'accommodation',n:"Tsuruga Resort Spa Mori no Uta",area:"Jozankei",d:"Premium onsen resort. Open-air baths in forest. Kaiseki dinner. Shuttle from Sapporo.",a:"3-chome, Jozankei Onsen Higashi, Sapporo, Japan",lat:42.9665,lng:141.1650,stars:5,tags:["Premium","Forest Onsen"],eld:"yes",t:"",days:[4],web:"https://www.morino-uta.com/en/"},
+{id:'ac5',cat:'accommodation',n:"Toya Sun Palace Resort",area:"Lake Toya",d:"Huge resort with massive onsen. Lakeside. Budget-friendly. Water park.",a:"7-1 Toyako Onsen, Toyako-cho, Japan",lat:42.5680,lng:140.8440,stars:3,tags:["Budget","Large Onsen"],eld:"yes",t:"",days:[5,6],web:"https://www.toyasunpalace.co.jp/en/"},
+{id:'ac6',cat:'accommodation',n:"La Vista Hakodate Bay",area:"Hakodate",d:"Top-rated hotel with rooftop onsen overlooking bay. Breakfast rated #1 in Japan.",a:"12-6 Toyokawa-cho, Hakodate, Japan",lat:41.7665,lng:140.7210,stars:5,tags:["Rooftop Onsen","#1 Breakfast"],eld:"yes",t:"",days:[7,8],web:"https://www.hotespa.net/hotels/lahakodate/en/"},
+{id:'ac7',cat:'accommodation',n:"Imagine Hotel & Resort Hakodate",area:"Hakodate",d:"Yunokawa onsen hotel. Ocean view. Heated pool. Close to Tropical Garden.",a:"1-2-30 Yunokawa-cho, Hakodate, Japan",lat:41.7692,lng:140.7920,stars:4,tags:["Ocean View","Pool"],eld:"yes",t:"",days:[7,8],web:"https://www.imagine-hotel.co.jp/en/"},
+{id:'ac8',cat:'accommodation',n:"Dai-ichi Takimotokan",area:"Noboribetsu",d:"Legendary onsen hotel with 35 baths. Right at Jigokudani entrance.",a:"55 Noboribetsu Onsen-cho, Japan",lat:42.4938,lng:141.1465,stars:4,tags:["35 Baths","At Jigokudani"],eld:"yes",t:"",days:[5],web:"https://takimotokan.co.jp/en/"},
+{id:'ac9',cat:'accommodation',n:"Hoshino Resorts OMO7 Asahikawa",area:"Asahikawa (optional)",d:"Stylish city hotel by Hoshino Resorts. Near Asahiyama Zoo. Modern design.",a:"6 Jodori 9-chome, Asahikawa, Japan",lat:43.7630,lng:142.3600,stars:4,tags:["Hoshino","Modern"],eld:"yes",t:"",days:[1,2,3],web:"https://hoshinoresorts.com/en/hotels/omo7asahikawa/"},
+{id:'ac10',cat:'accommodation',n:"Pension Jacatra",area:"Furano",d:"Cozy European-style pension. Homemade dinner. English-speaking owner.",a:"Kita-no-mine, Furano, Japan",lat:43.3450,lng:142.3750,stars:3,tags:["Pension","Homemade Dinner"],eld:"yes",t:"",days:[3],web:"https://www.tripadvisor.com/Hotel_Review-g1120600-d1168675-Reviews-Pension_Jacatra-Furano_Hokkaido.html"},
+// ═══ HOKKAIDO FOOD GUIDE — from Culinary Bounty research ═══
+// DINING (15 new food-focused picks)
+{id:'fg1',cat:'dining',n:"Kaisendon at Nijo Market (二条市場)",area:"Sapporo",d:"Premium seafood bowl with uni, ikura, scallops & crab. Hokkaido's 'food basket' in a bowl — cold northern seas produce Japan's sweetest seafood.",a:"Minami 3-jo Higashi 1, Chuo-ku, Sapporo, Japan",lat:43.0560,lng:141.3570,stars:5,tags:["Kaisendon","Uni & Ikura","Food Guide"],eld:"yes",t:"10:00 AM",days:[1,2],web:"https://www.tripadvisor.com/Attraction_Review-g298560-d1373615-Reviews-Nijo_Market-Sapporo_Hokkaido.html"},
+{id:'fg2',cat:'dining',n:"Kegani (Hairy Crab) at Sapporo Kaniro",area:"Sapporo",d:"Hokkaido's prized hairy crab — sweet meat and rich roe, unlike any other crab. Seasonal delicacy best Oct-Jan. Also try snow crab (zuwai) and king crab (taraba).",a:"Minami 4 Nishi 2, Chuo-ku, Sapporo 064-0804, Japan",lat:43.0535,lng:141.3545,stars:5,tags:["Hairy Crab","Seasonal","Food Guide"],eld:"yes",t:"6:00 PM",days:[1,2],web:"https://www.tripadvisor.com/Restaurants-g298560-zfz10310-Sapporo_Hokkaido.html"},
+{id:'fg3',cat:'dining',n:"Nemuro Hanamaru Conveyor Sushi",area:"Sapporo",d:"Top-rated kaiten-zushi — Hokkaido conveyor belt sushi is world-class. Try hakaku (octagonal fish) and unique taco salad gunkan. Fresh from northern seas.",a:"Stellar Place 6F, Kita 5 Nishi 2, Sapporo, Japan",lat:43.0687,lng:141.3508,stars:5,tags:["Kaiten Sushi","Hakaku","Food Guide"],eld:"yes",t:"11:30 AM",days:[1,2],web:"https://www.tripadvisor.com/Restaurant_Review-g298560-d3866877-Reviews-Nemuro_Hanamaru_JR_Tower_Stellar_Place-Sapporo_Hokkaido.html"},
+{id:'fg4',cat:'dining',n:"Grilled Hokke (Atka Mackerel)",area:"Sapporo",d:"Ichiya-boshi style — fish dried overnight to concentrate flavor, then grilled to perfection. A Hokkaido izakaya essential. Pairs beautifully with Sapporo beer.",a:"Susukino, Chuo-ku, Sapporo, Japan",lat:43.0530,lng:141.3540,stars:4,tags:["Ichiya-boshi","Izakaya","Food Guide"],eld:"yes",t:"7:00 PM",days:[1,2],web:"https://www.japan-guide.com/e/e5311.html"},
+{id:'fg5',cat:'dining',n:"Chicken Pyon Ramen (鶏Pyon)",area:"Sapporo",d:"Modern Sapporo ramen — creamy white chicken broth topped with rosemary foam. Unique fusion style. Some seasons feature grilled shirako (cod milt) topping.",a:"Minami 3 Nishi 1, Chuo-ku, Sapporo, Japan",lat:43.0550,lng:141.3560,stars:4,tags:["Modern Ramen","Rosemary Foam","Food Guide"],eld:"yes",t:"12:00 PM",days:[1,2],web:"https://www.tripadvisor.com/Restaurant_Review-g298560-d24848890-Reviews-Tori_Pyon-Sapporo_Hokkaido.html"},
+{id:'fg6',cat:'dining',n:"Milk Style Soup Curry",area:"Sapporo",d:"Unique Sapporo variation — soup curry made with rich Hokkaido milk for extra creaminess. Large tender meat pieces with colorful vegetables in spiced broth.",a:"Chuo-ku, Sapporo, Japan",lat:43.0540,lng:141.3520,stars:4,tags:["Milk Style","Hokkaido Milk","Food Guide"],eld:"yes",t:"12:00 PM",days:[1,2],web:"https://www.japan-guide.com/e/e5311.html"},
+{id:'fg7',cat:'dining',n:"Salt Ginger Ramen (塩生姜ラーメン)",area:"Sapporo",d:"Lighter shio-style ramen with warming ginger — perfect for cold weather. A gentler alternative to heavy miso ramen, still deeply flavorful.",a:"Chuo-ku, Sapporo, Japan",lat:43.0545,lng:141.3505,stars:4,tags:["Shio Ramen","Ginger","Food Guide"],eld:"yes",t:"11:30 AM",days:[1,2],web:"https://www.japan-guide.com/e/e5311.html"},
+{id:'fg8',cat:'dining',n:"Crab Cream Croquettes (カニクリームコロッケ)",area:"Sapporo",d:"Handmade with rich Hokkaido milk — exceptionally creamy interior filled with sweet crab. A beloved Hokkaido comfort food found at department store food halls.",a:"Stellar Place B1, Kita 5 Nishi 2, Sapporo, Japan",lat:43.0687,lng:141.3508,stars:4,tags:["Hokkaido Milk","Comfort Food","Food Guide"],eld:"yes",t:"12:00 PM",days:[1,2],web:"https://www.japan-guide.com/e/e5300.html"},
+{id:'fg9',cat:'snacks',n:"Chikuwapan (ちくわパン)",area:"Sapporo",d:"Unique Hokkaido bakery snack — bread roll stuffed with a whole chikuwa fish cake filled with tuna mayo. Beloved local comfort food you won't find elsewhere in Japan.",a:"Donguri Bakery, Minami 1 Nishi 5, Sapporo, Japan",lat:43.0580,lng:141.3500,stars:4,tags:["Only in Hokkaido","Chikuwa","Food Guide"],eld:"yes",t:"Any",days:[1,2],web:"https://www.tripadvisor.com/Restaurant_Review-g298560-d8572189-Reviews-Donguri_Odori-Sapporo_Hokkaido.html"},
+{id:'fg10',cat:'snacks',n:"Hangansama Rice Cake (判官さま)",area:"Sapporo",d:"Warm, soft rice cake with slightly salty filling — exclusive to Rokkatei's shop at Hokkaido Shrine. Only available here, a true hidden gem.",a:"Hokkaido Shrine, 474 Miyagaoka, Chuo-ku, Sapporo, Japan",lat:43.0546,lng:141.3094,stars:4,tags:["Exclusive","Hidden Gem","Food Guide"],eld:"yes",t:"10:00 AM",days:[1,2],web:"https://www.rokkatei.co.jp/en/"},
+{id:'fg11',cat:'snacks',n:"Hokkaido University Milk & Ice Cream",area:"Sapporo",d:"The university produces its own milk and ice cream — incredibly rich dairy from campus farms. Hokkaido produces over half of Japan's milk supply!",a:"Hokkaido University, Kita 8 Nishi 5, Kita-ku, Sapporo, Japan",lat:43.0726,lng:141.3409,stars:4,tags:["Campus Special","Hokkaido Dairy","Food Guide"],eld:"yes",t:"11:00 AM",days:[1,2],web:"https://www.tripadvisor.com/Attraction_Review-g298560-d1373522-Reviews-Hokkaido_University-Sapporo_Hokkaido.html"},
+{id:'fg12',cat:'dining',n:"Seicomart Hot Chef (セイコーマート)",area:"All Hokkaido",d:"Hokkaido's beloved local convenience store — 'Hot Chef' section serves freshly made fried chicken, bento & katsudon loved by locals. Find one everywhere on your drive!",a:"Various locations across Hokkaido",lat:43.0600,lng:141.3540,stars:4,tags:["Convenience","Hot Chef","Food Guide"],eld:"yes",t:"Any",days:[1,2,3,4,5,6,7,8,9],web:"https://www.seicomart.co.jp/"},
+{id:'fg13',cat:'dining',n:"Premium Kaisendon (Deluxe Bowl)",area:"Hakodate",d:"Luxurious seafood bowl featuring abalone, fatty tuna, uni, ikura & crab — the ultimate Hakodate morning market experience. Cold northern seas make the difference.",a:"9-19 Wakamatsu-cho, Hakodate 040-0063, Japan",lat:41.7730,lng:140.7270,stars:5,tags:["Premium","Abalone","Food Guide"],eld:"yes",t:"7:00 AM",days:[7,8],web:"https://www.tripadvisor.com/Attraction_Review-g298151-d1373508-Reviews-Hakodate_Morning_Market-Hakodate_Hokkaido.html"},
+{id:'fg14',cat:'snacks',n:"Hokkaido Milk Soft Serve (牧場ソフト)",area:"Furano",d:"Incredibly rich soft serve from local farm milk — Hokkaido dairy is world-class. Available at farms, roadside stations, and markets throughout the region.",a:"Farm Tomita, Nakafurano-cho, Japan",lat:43.3350,lng:142.3770,stars:4,tags:["Farm Fresh","Dairy","Food Guide"],eld:"yes",t:"Any",days:[3,5,6],web:"https://www.farm-tomita.co.jp/en/"},
+{id:'fg15',cat:'dining',n:"Tachikama Sashimi (たちかま)",area:"Sapporo",d:"Winter delicacy — cod milt (shirako) processed into a bouncy, creamy kamaboko. A unique Hokkaido texture experience found at izakayas Oct-Feb.",a:"Susukino, Chuo-ku, Sapporo, Japan",lat:43.0525,lng:141.3535,stars:4,tags:["Winter Only","Delicacy","Food Guide"],eld:"yes",t:"7:00 PM",days:[1,2],web:"https://www.japan-guide.com/e/e5311.html"}
+];
+
+/* ════════════════════════════════════════
+   STATE MANAGEMENT
+   ════════════════════════════════════════ */
+let customEntries=[];try{customEntries=JSON.parse(localStorage.getItem('trip_ce')||'[]');}catch(e){customEntries=[];}
+let skippedEntries=[];try{skippedEntries=JSON.parse(localStorage.getItem('trip_sk')||'[]');}catch(e){skippedEntries=[];}
+let addedPicks=[];try{addedPicks=JSON.parse(localStorage.getItem('trip_ap')||'[]');}catch(e){addedPicks=[];}
+let editingId=null, currentDay=0, map, markersLayer, routeLayer;
+
+const COLORS={accommodation:'#2980b9',poi:'#27ae60',dining:'#e67e22',activity:'#8854ad',snacks:'#d63384',transport:'#e74c3c'};
+const ICONS={accommodation:'🏨',poi:'📍',dining:'🍽️',activity:'🎯',snacks:'🍡',transport:'✈️'};
+const SEC_MAP={poi:'po',dining:'di',activity:'at',snacks:'sn'};
+const REV_MAP={po:'poi',di:'dining',at:'activity',sn:'snacks'};
+
+function save(){try{localStorage.setItem('trip_ce',JSON.stringify(customEntries));localStorage.setItem('trip_sk',JSON.stringify(skippedEntries));localStorage.setItem('trip_ap',JSON.stringify(addedPicks));}catch(e){console.warn('Failed to save:',e);toast('Could not save — storage may be full','warn');}}
+function toast(msg,type='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className='toast '+type+' show';setTimeout(()=>el.classList.remove('show'),2500);}
+function parseTime(s){if(!s)return 720;const m=s.toLowerCase().match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);if(m){let h=+m[1];if(m[3]==='pm'&&h<12)h+=12;if(m[3]==='am'&&h===12)h=0;return h*60+(+m[2]);}if(s.toLowerCase().includes('morning'))return 540;if(s.toLowerCase().includes('afternoon'))return 840;return 720;}
+function skKey(d,c,n){return`${d}|${c}|${n}`;}
+function isSkipped(d,c,n){return skippedEntries.includes(skKey(d,c,n));}
+function gmapUrl(addr){return addr?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`:'';}
+function gmapCoord(lat,lng){return(lat&&lng)?`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`:'';}
+function gmapLink(item){return item.a?gmapUrl(item.a):(item.address?gmapUrl(item.address):gmapCoord(item.lat,item.lng));}
+function escapeAttr(n){return(n||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+
+/* ════════════════════════════════════════
+   MERGE ENGINE
+   ════════════════════════════════════════ */
+function normalize(item,cat,dayIdx){
+  return{name:item.n||item.name||'',desc:item.d||item.desc||'',lat:item.lat,lng:item.lng,
+    address:item.a||item.address||'',time:item.t||item.time||'',type:item.tp||item.type||'',
+    elderly:item.e||item.elderly||'',elderlyNote:item.en||item.elderlyNote||'',
+    recommended:item.rc||item.recommended,_src:'original',_id:0,_skipped:false,_cat:cat,_dayIdx:dayIdx,_replaces:null};
+}
+
+function getMergedDay(idx){
+  if(idx>=TRIP.length)return null;
+  const day=TRIP[idx];
+  const customs=customEntries.filter(e=>+e.day===idx);
+
+  function mergeSection(origItems,cat){
+    const catCustoms=customs.filter(e=>e.category===cat);
+    const replacedNames=new Set(catCustoms.filter(e=>e.replaces).map(e=>e.replaces));
+    let result=[];
+    (origItems||[]).forEach(item=>{
+      const ni=normalize(item,cat,idx);
+      ni._skipped=isSkipped(idx,cat,ni.name);
+      if(!replacedNames.has(ni.name))result.push(ni);
+    });
+    catCustoms.forEach(e=>{
+      result.push({name:e.name,desc:e.desc,lat:e.lat?+e.lat:null,lng:e.lng?+e.lng:null,
+        address:e.address,time:e.time,type:e.type||'',elderly:e.elderly,elderlyNote:e.elderlyNote||'',
+        recommended:e.recommended,_src:'custom',_id:e.id,_skipped:false,_cat:cat,_dayIdx:idx,_replaces:e.replaces});
+    });
+    result.sort((a,b)=>{if(a._skipped!==b._skipped)return a._skipped?1:-1;return parseTime(a.time)-parseTime(b.time);});
+    return result;
+  }
+
+  let acc=null;
+  if(day.ac){acc=normalize(day.ac,'accommodation',idx);acc._skipped=isSkipped(idx,'accommodation',acc.name);}
+  const accCustoms=customs.filter(e=>e.category==='accommodation');
+  if(accCustoms.length){
+    const e=accCustoms[accCustoms.length-1];
+    acc={name:e.name,address:e.address,lat:e.lat?+e.lat:null,lng:e.lng?+e.lng:null,
+      notes:e.desc,elderly:e.elderly,elderlyNote:e.elderlyNote,_src:'custom',_id:e.id,_dayIdx:idx,_skipped:false};
+  }
+
+  return{...day,acc,po:mergeSection(day.po,'poi'),di:mergeSection(day.di,'dining'),at:mergeSection(day.at,'activity'),sn:mergeSection(day.sn,'snacks'),_stays:day._stays||[]};
+}
+
+function getAllMarkers(){
+  const ms=[];
+  ms.push({lat:35.5494,lng:139.7798,name:"Haneda Airport",cat:"transport",day:1,desc:"Arrival",addr:"Hanedakuko, Tokyo"});
+  ms.push({lat:42.7752,lng:141.6925,name:"New Chitose Airport",cat:"transport",day:2,desc:"To Sapporo",addr:"Bibi, Chitose"});
+  ms.push({lat:41.7700,lng:140.8220,name:"Hakodate Airport",cat:"transport",day:TRIP.length,desc:"Departure",addr:"Takamatsu-cho, Hakodate"});
+  for(let i=0;i<TRIP.length;i++){
+    const m=getMergedDay(i);
+    if(m.acc&&!m.acc._skipped&&m.acc.lat)ms.push({lat:m.acc.lat,lng:m.acc.lng,name:m.acc.name,cat:'accommodation',day:m.day,desc:m.acc.notes||'',addr:m.acc.address||''});
+    ['po','di','at','sn'].forEach(k=>{
+      const cat=REV_MAP[k]||k;
+      (m[k]||[]).forEach(it=>{if(!it._skipped&&it.lat&&it.lng)ms.push({lat:it.lat,lng:it.lng,name:it.name,cat,day:m.day,desc:it.desc||'',addr:it.address||''});});
+    });
+  }
+  const seen=new Set();
+  return ms.filter(m=>{const k=(m.lat||0).toFixed(3)+'_'+(m.lng||0).toFixed(3)+'_'+m.name;if(seen.has(k))return false;seen.add(k);return true;});
+}
+
+/* ════════════════════════════════════════
+   RENDER: FLIGHT BANNER
+   ════════════════════════════════════════ */
+function renderFlight(){
+  const arr=tripArrival(),end=lastDate();
+  document.getElementById('flightBox').innerHTML=`
+    <div class="fl-seg"><h3>✈️ Departure</h3><div class="fl-city">${tripFrom}</div><div class="fl-det">📅 ${fmt(tripDepart)} · 🕐 1:35 PM</div></div>
+    <div class="fl-arrow">✈→</div>
+    <div class="fl-seg"><h3>🛬 Arrival</h3><div class="fl-city">Tokyo Haneda (HND)</div><div class="fl-det">📅 ${fmt(arr)} — 7:00 PM JST · T3</div></div>
+    <div class="fl-arrow">✈→</div>
+    <div class="fl-seg"><h3>🔙 Return</h3><div class="fl-city">Hakodate → HND → ${tripFrom}</div><div class="fl-det">📅 ${fmt(end)}</div></div>
+    <div class="fl-dates"><div class="lbl">Duration</div><div class="val">${fmtS(arr)} – ${fmtS(end)}</div><div class="lbl" style="margin-top:3px">Total</div><div class="val">${tripDays} Days / ${tripDays-1} Nights</div></div>`;
+}
+
+/* ════════════════════════════════════════
+   RENDER: STATS
+   ════════════════════════════════════════ */
+function updateStats(){
+  let p=0,d=0,a=0;
+  for(let i=0;i<TRIP.length;i++){const m=getMergedDay(i);p+=(m.po||[]).filter(x=>!x._skipped).length;d+=(m.di||[]).filter(x=>!x._skipped).length;if(m.acc&&!m.acc._skipped)a++;}
+  document.getElementById('stPOI').textContent=p;document.getElementById('stDin').textContent=d;document.getElementById('stAcc').textContent=a;
+}
+
+/* ════════════════════════════════════════
+   RENDER: RECOMMENDATIONS (scrollable)
+   ════════════════════════════════════════ */
+function renderRecs(){
+  const dl=[],pl=[],al=[];
+  for(let i=0;i<TRIP.length;i++){
+    const m=getMergedDay(i);
+    (m.po||[]).filter(x=>!x._skipped&&(x.recommended||x.desc?.includes('⭐'))).forEach(x=>pl.push({...x,day:m.day,_di:i}));
+    (m.di||[]).filter(x=>!x._skipped&&(x.recommended||x.desc?.includes('⭐'))).forEach(x=>dl.push({...x,day:m.day,_di:i}));
+    (m.at||[]).filter(x=>!x._skipped&&(x.recommended||x.desc?.includes('⭐'))).forEach(x=>al.push({...x,day:m.day,_di:i}));
+  }
+  function cards(items,topClass){
+    return items.map(x=>{
+      const gl=gmapLink(x);
+      return`<div class="rec-c" onclick="goToDay(${x._di})"><div class="rec-top ${topClass}"></div><div class="rec-bd"><h4>${x.name}</h4><p>${(x.desc||'').replace('⭐','').trim()}</p>${x.time?`<p>⏰ ${x.time}</p>`:''}<span class="tag-s tag-star">⭐</span>${x.elderly==='yes'?'<span class="tag-s tag-eld">Elderly✓</span>':''}<div class="rec-day">Day ${x.day}</div>${gl?`<a class="gm-link" href="${gl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">📍 Maps</a>`:''}</div></div>`;
+    }).join('');
+  }
+  document.getElementById('recD').innerHTML=cards(dl,'t-din')||'<p style="padding:12px;color:var(--t2)">No recommendations yet</p>';
+  document.getElementById('recP').innerHTML=cards(pl,'t-poi')||'<p style="padding:12px;color:var(--t2)">No recommendations yet</p>';
+  document.getElementById('recA').innerHTML=cards(al,'t-act')||'<p style="padding:12px;color:var(--t2)">No recommendations yet</p>';
+}
+
+function goToDay(i){currentDay=i;switchPanel('itinerary');renderDay(i);}
+
+/* ════════════════════════════════════════
+   RENDER: ITINERARY
+   ════════════════════════════════════════ */
+function renderDayNav(){
+  document.getElementById('dayNav').innerHTML=TRIP.map((d,i)=>
+    `<button class="day-btn ${i===currentDay?'on':''}" onclick="renderDay(${i})"><span class="d-date">Day ${d.day} · ${d.dt}</span><span class="d-loc">${d.lo}</span></button>`
+  ).join('');
+}
+
+function entryHTML(item,cat){
+  const isCustom=item._src==='custom',isSkip=item._skipped;
+  let cls='entry';if(isSkip)cls+=' e-skip';else if(isCustom)cls+=' e-custom';
+  let badges='';
+  if(isCustom)badges+='<span class="badge b-cust">✚ Added</span>';
+  if(isSkip)badges+='<span class="badge b-skip">SKIPPED</span>';
+  if(item.elderly==='yes')badges+='<span class="badge b-grn">Elderly✓</span>';
+  else if(item.elderly==='moderate')badges+='<span class="badge b-org">⚠</span>';
+  if(item.type)badges+=`<span class="badge b-pur">${item.type}</span>`;
+  if(cat==='snacks')badges+='<span class="badge b-pnk">🍡</span>';
+  const gl=gmapLink(item);
+  const esc=n=>(n||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const escAttr=n=>(n||'').replace(/'/g,"\\'").replace(/\\/g,'\\\\');
+  let acts='<div class="entry-acts">';
+  if(isSkip){
+    acts+=`<button class="unskip" onclick="unskipEntry(${item._dayIdx},'${cat}','${escAttr(item.name)}')">↩ Un-skip / Restore</button>`;
+  } else if(isCustom){
+    acts+=`<button class="e-btn" style="color:var(--bl)" onclick="editEntry(${item._id})">✏️ Edit</button>`;
+    acts+=`<button class="e-btn" style="color:var(--rd)" onclick="deleteEntry(${item._id})">🗑️ Delete</button>`;
+  } else {
+    acts+=`<button class="e-btn" style="color:var(--bl)" onclick="replaceEntry(${item._dayIdx},'${cat}','${escAttr(item.name)}')">✏️ Edit</button>`;
+    acts+=`<button class="e-btn" style="color:var(--wn)" onclick="skipEntry(${item._dayIdx},'${cat}','${escAttr(item.name)}')">⊘ Skip</button>`;
+  }
+  if(gl)acts+=`<a class="gm-link" href="${gl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">📍 Maps</a>`;
+  acts+='</div>';
+  return`<div class="${cls}"><h4>${item.name} ${badges}</h4>${item.desc?`<p>${item.desc}</p>`:''}${item.address?`<p style="color:var(--bl);font-size:11px">📍 ${item.address}</p>`:''}${item.time?`<p>⏰ ${item.time}</p>`:''}${item.elderlyNote?`<p>👴 ${item.elderlyNote}</p>`:''}${acts}</div>`;
+}
+
+function renderDay(idx){
+  if(idx<0||idx>=TRIP.length)idx=0;
+  currentDay=idx;renderDayNav();
+  const m=getMergedDay(idx);
+  if(!m)return;
+  const el=document.getElementById('dayContent');
+  let h=`<div class="d-header"><div class="d-num">${m.day}</div><div class="d-info"><h2>${m.ti}</h2><p>${m.dt} · ${m.lo}</p></div></div>`;
+  if(m.et)h+=`<div class="sec s-eld"><h3>👴 Elderly Notes</h3><p>${m.et}</p></div>`;
+  if(m.dr){const d=m.dr;h+=`<div class="sec s-drv"><h3>🚗 Driving: ${d.f} → ${d.t}</h3><p>📏 ${d.km} · ⏱️ ${d.du}</p>${d.nt?`<p>📝 ${d.nt}</p>`:''}<a class="gm-link" href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(d.f+', Hokkaido, Japan')}&destination=${encodeURIComponent(d.t+', Hokkaido, Japan')}" target="_blank" rel="noopener noreferrer">🗺️ Google Maps Route</a></div>`;}
+  // Accommodation
+  if(m.acc){
+    const a=m.acc,sk=a._skipped,ic=a._src==='custom';
+    const gl=a.address?gmapUrl(a.address):gmapCoord(a.lat,a.lng);
+    const gmDirect=(a.lat&&a.lng)?`https://www.google.com/maps/search/${encodeURIComponent(a.name)}/@${a.lat},${a.lng},17z`:gl;
+    h+=`<div class="sec s-acc"><div class="sec-h"><h3>🏨 Accommodation</h3><button class="e-btn" onclick="addNewEntry(${idx},'accommodation')">+</button></div>
+    <div class="entry ${sk?'e-skip':''} ${ic?'e-custom':''}">
+    <h4>${a.name} ${sk?'<span class="badge b-skip">SKIPPED</span>':''}${ic?'<span class="badge b-cust">✚</span>':''}</h4>
+    ${a.address?`<p style="color:var(--bl);font-size:11px">📍 ${a.address}</p>`:''}${a.notes?`<p>${a.notes}</p>`:''}
+    <div class="entry-acts">
+    ${sk?`<button class="unskip" onclick="unskipEntry(${idx},'accommodation','${escapeAttr(a.name)}')">↩ Un-skip</button>`:
+      ic?`<button class="e-btn" style="color:var(--bl)" onclick="editEntry(${a._id})">✏️</button><button class="e-btn" style="color:var(--rd)" onclick="deleteEntry(${a._id})">🗑️</button>`:
+      `<button class="e-btn" style="color:var(--bl)" onclick="replaceEntry(${idx},'accommodation','${escapeAttr(a.name)}')">✏️</button><button class="e-btn" style="color:var(--wn)" onclick="skipEntry(${idx},'accommodation','${escapeAttr(a.name)}')">⊘</button>`}
+    ${gmDirect?`<a class="gm-link" href="${gmDirect}" target="_blank" rel="noopener noreferrer">📍 Google Maps</a>`:''}</div></div></div>`;
+  } else {
+    h+=`<div class="sec s-acc"><button class="add-btn" onclick="addNewEntry(${idx},'accommodation')">+ Add Accommodation</button></div>`;
+  }
+  // Sections
+  [{k:'po',c:'poi',icon:'📍',label:'Points of Interest',cls:'s-poi'},{k:'di',c:'dining',icon:'🍽️',label:'Dining',cls:'s-din'},{k:'at',c:'activity',icon:'🎯',label:'Activities',cls:'s-act'},{k:'sn',c:'snacks',icon:'🍡',label:'Snacks & Drinks',cls:'s-snk'}].forEach(s=>{
+    const items=m[s.k]||[];
+    h+=`<div class="sec ${s.cls}"><div class="sec-h"><h3>${s.icon} ${s.label} (${items.filter(x=>!x._skipped).length})</h3></div>`;
+    items.forEach(item=>h+=entryHTML(item,s.c));
+    h+=`<button class="add-btn" onclick="addNewEntry(${idx},'${s.c}')">+ Add</button></div>`;
+  });
+  // Stays section (10 accommodation picks from generator)
+  if(m._stays&&m._stays.length>1){
+    h+=`<div class="sec s-acc"><div class="sec-h"><h3>🏨 Recommended Stays (${m._stays.length})</h3></div>`;
+    m._stays.forEach(st=>{
+      const stName=st.n||st.name||'';
+      const stAddr=st.a||st.address||'';
+      const gl=stAddr?gmapUrl(stAddr):gmapCoord(st.lat,st.lng);
+      const gmDirect=(st.lat&&st.lng)?`https://www.google.com/maps/search/${encodeURIComponent(stName)}/@${st.lat},${st.lng},17z`:gl;
+      h+=`<div class="entry"><h4>${stName}${st.e==='yes'||st.elderly==='yes'?' <span class="badge b-grn">Elderly✓</span>':''}</h4>
+        ${st.d||st.desc?`<p>${st.d||st.desc}</p>`:''}
+        ${stAddr?`<p style="color:var(--bl);font-size:11px">📍 ${stAddr}</p>`:''}
+        <div class="entry-acts">${gmDirect?`<a class="gm-link" href="${gmDirect}" target="_blank" rel="noopener noreferrer">📍 Google Maps</a>`:''}</div></div>`;
+    });
+    h+=`</div>`;
+  }
+  el.innerHTML=h;
+}
+
+/* ════════════════════════════════════════
+   ENTRY ACTIONS: Skip, Unskip, Delete
+   ════════════════════════════════════════ */
+function skipEntry(d,c,n){skippedEntries.push(skKey(d,c,n));save();refreshAll();toast(`Skipped: ${n}`,'warn');}
+function unskipEntry(d,c,n){skippedEntries=skippedEntries.filter(k=>k!==skKey(d,c,n));save();refreshAll();toast(`Restored: ${n}`);}
+function deleteEntry(id){if(!confirm('Delete this entry?'))return;customEntries=customEntries.filter(x=>x.id!==id);save();refreshAll();toast('Deleted','warn');}
+
+/* ════════════════════════════════════════
+   DATA ENTRY FORM
+   ════════════════════════════════════════ */
+function populateDaySelect(){
+  const s=document.getElementById('fd');
+  s.innerHTML='<option value="">Select day…</option>';
+  TRIP.forEach((d,i)=>{s.innerHTML+=`<option value="${i}">Day ${d.day} — ${d.dt} (${d.lo})</option>`;});
+}
+function updateActions(){
+  const di=+document.getElementById('fd').value,cat=document.getElementById('fc').value;
+  const sel=document.getElementById('fa');
+  sel.innerHTML='<option value="add">➕ Add New</option>';
+  if(isNaN(di)||!cat||di<0||di>=TRIP.length)return;
+  const day=TRIP[di];
+  let entries=[];
+  if(cat==='accommodation'&&day.ac)entries=[normalize(day.ac,'accommodation',di)];
+  else{const k=SEC_MAP[cat];if(k)entries=(day[k]||[]).map(x=>normalize(x,cat,di));}
+  entries.forEach(e=>{if(!isSkipped(di,cat,e.name))sel.innerHTML+=`<option value="replace:${e.name}">🔄 Replace: ${e.name}</option>`;});
+}
+function onActionChange(){
+  const v=document.getElementById('fa').value;
+  if(v.startsWith('replace:')){
+    const name=v.substring(8),di=+document.getElementById('fd').value,cat=document.getElementById('fc').value;
+    const day=TRIP[di];let entry;
+    if(cat==='accommodation'&&day.ac)entry=normalize(day.ac,'accommodation',di);
+    else{const k=SEC_MAP[cat];entry=(day[k]||[]).map(x=>normalize(x,cat,di)).find(x=>x.name===name);}
+    if(entry)prefillForm(entry);
+  }
+}
+function prefillForm(e){
+  document.getElementById('fn').value=e.name||'';document.getElementById('ft').value=e.time||'';
+  document.getElementById('faddr').value=e.address||'';document.getElementById('flat').value=e.lat||'';
+  document.getElementById('flng').value=e.lng||'';document.getElementById('fdesc').value=e.desc||e.notes||'';
+  document.getElementById('feld').value=e.elderly||'yes';document.getElementById('feldnote').value=e.elderlyNote||'';
+}
+function cancelEdit(){clearForm();}
+function clearForm(){
+  document.getElementById('entryForm').reset();
+  document.getElementById('fa').innerHTML='<option value="add">➕ Add New</option>';
+  editingId=null;
+  document.getElementById('formTitle').textContent='➕ Add New Entry';
+  document.getElementById('submitBtn').textContent='➕ Add Entry';
+  document.getElementById('cancelBtn').style.display='none';
+}
+function addNewEntry(d,c){clearForm();document.getElementById('fd').value=d;document.getElementById('fc').value=c;updateActions();switchPanel('entry');document.getElementById('fn').focus();toast('Fill in the form below','info');}
+function replaceEntry(d,c,n){clearForm();document.getElementById('fd').value=d;document.getElementById('fc').value=c;updateActions();document.getElementById('fa').value='replace:'+n;onActionChange();switchPanel('entry');document.getElementById('formTitle').textContent='🔄 Replace: '+n;document.getElementById('submitBtn').textContent='🔄 Replace';document.getElementById('fn').focus();}
+function editEntry(id){
+  const e=customEntries.find(x=>x.id===id);if(!e)return;
+  editingId=id;document.getElementById('fd').value=e.day;document.getElementById('fc').value=e.category;updateActions();
+  if(e.replaces)document.getElementById('fa').value='replace:'+e.replaces;
+  prefillForm(e);
+  document.getElementById('formTitle').textContent='✏️ Edit: '+e.name;
+  document.getElementById('submitBtn').textContent='💾 Save Changes';
+  document.getElementById('cancelBtn').style.display='';
+  switchPanel('entry');document.getElementById('fn').focus();
+}
+function submitEntry(ev){
+  ev.preventDefault();
+  const actionVal=document.getElementById('fa').value;
+  const isReplace=actionVal.startsWith('replace:');
+  const replacesName=isReplace?actionVal.substring(8):null;
+  const entry={
+    id:editingId||Date.now(),day:document.getElementById('fd').value,category:document.getElementById('fc').value,
+    name:document.getElementById('fn').value.trim(),time:document.getElementById('ft').value.trim(),
+    address:document.getElementById('faddr').value.trim(),lat:parseFloat(document.getElementById('flat').value)||null,
+    lng:parseFloat(document.getElementById('flng').value)||null,desc:document.getElementById('fdesc').value.trim(),
+    elderly:document.getElementById('feld').value,elderlyNote:document.getElementById('feldnote').value.trim(),
+    replaces:replacesName
+  };
+  if(editingId){const idx=customEntries.findIndex(e=>e.id===editingId);if(idx>=0)customEntries[idx]=entry;toast('Entry updated!');}
+  else{customEntries.push(entry);toast(isReplace?`Replaced "${replacesName}"`:'Entry added!');}
+  save();clearForm();refreshAll();
+}
+function renderCustomList(){
+  const el=document.getElementById('customList');
+  document.getElementById('customCount').textContent=customEntries.length;
+  if(!customEntries.length){el.innerHTML='<p style="color:var(--t2)">No custom entries yet.</p>';return;}
+  el.innerHTML=customEntries.map(e=>{
+    const emoji=ICONS[e.category]||'📌';
+    const dayInfo=TRIP[+e.day]?`Day ${TRIP[+e.day].day} — ${TRIP[+e.day].dt}`:'—';
+    return`<div class="erow"><div class="inf"><h4>${emoji} ${e.name} ${e.replaces?'<span class="badge b-grn">↔'+e.replaces+'</span>':''}</h4><p>${dayInfo} · ${e.category}</p></div><div style="display:flex;gap:3px"><button class="btn btn-sm btn-g" onclick="editEntry(${e.id})">✏️</button><button class="btn btn-sm btn-p" onclick="deleteEntry(${e.id})">🗑️</button></div></div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════
+   CRITIC'S PICKS — TABBED BY CATEGORY + DAY
+   ════════════════════════════════════════ */
+let pickCat='dining', pickDay=0;
+
+// Build 10 picks for a given category + day using location-aware scoring
+function getPicksForDay(cat,dayIdx){
+  const day=TRIP[dayIdx];
+  if(!day)return[];
+  const lo=day.lo||'';
+  const route=HOKKAIDO_ROUTE.find(r=>r.lo===lo);
+  const areas=route?route.areas:[lo];
+  const pool=PICKS.filter(p=>p.cat===cat);
+  // Score each pick: local match > global > others, then by stars + random for variety
+  const seed=dayIdx*7+cat.length*13; // deterministic variety per day
+  const scored=pool.map((p,i)=>{
+    const isLocal=areas.some(a=>p.area.toLowerCase().includes(a.toLowerCase())||a.toLowerCase().includes(p.area.toLowerCase()));
+    const isGlobal=p.area==='All Hokkaido'||p.area==='Airports & shops'||p.area==='Airports';
+    const variety=((seed+i*31)%100)/100*3; // pseudo-random but deterministic per day
+    return{p,score:(isLocal?1000:0)+(isGlobal?500:0)+p.stars*10+variety};
+  }).sort((a,b)=>b.score-a.score);
+  // Rotate pool per day so different days show different ordering
+  const rotated=[...scored];
+  const rotation=(dayIdx*pool.length)%Math.max(1,scored.length);
+  // Take top local, then rotate remainder for variety across days
+  const locals=rotated.filter(s=>s.score>=1000);
+  const rest=rotated.filter(s=>s.score<1000);
+  const shifted=[...rest.slice(rotation%Math.max(1,rest.length)),...rest.slice(0,rotation%Math.max(1,rest.length))];
+  const combined=[...locals,...shifted];
+  return combined.slice(0,10).map(s=>s.p);
+}
+
+function selectPickCat(cat){
+  pickCat=cat;
+  document.querySelectorAll('.pk-tab').forEach(t=>t.classList.toggle('on',t.dataset.cat===cat));
+  renderPickDays();
+  renderPicks();
+}
+
+function selectPickDay(d){
+  pickDay=d;
+  document.querySelectorAll('.pk-day').forEach(b=>b.classList.toggle('on',+b.dataset.day===d));
+  renderPicks();
+}
+
+function renderPickDays(){
+  const el=document.getElementById('pkDays');
+  el.innerHTML=TRIP.map((d,i)=>
+    `<button class="pk-day ${i===pickDay?'on':''}" data-day="${i}" onclick="selectPickDay(${i})">Day ${d.day} · ${d.lo}</button>`
+  ).join('');
+}
+
+function renderPicks(){
+  const grid=document.getElementById('picksGrid');
+  const dayInfo=TRIP[pickDay];
+  const items=getPicksForDay(pickCat,pickDay);
+  const catLabel={dining:'🍽️ Dining',poi:'📍 Points of Interest',activity:'🎯 Activities',snacks:'🍡 Snacks & Drinks',accommodation:'🏨 Stays'}[pickCat]||pickCat;
+
+  // For accommodation: find which stay is currently selected for this day
+  const isStaysCat=pickCat==='accommodation';
+  const currentStay=isStaysCat?customEntries.find(e=>+e.day===pickDay&&e.category==='accommodation'):null;
+  const currentStayName=currentStay?.name||'';
+
+  let html=`<div class="pk-summary"><b>${catLabel}</b> · Day ${dayInfo?.day||1} · ${dayInfo?.lo||'—'} · <span style="color:var(--ok)">${items.length} picks</span>`;
+  if(isStaysCat){
+    html+=currentStayName
+      ?` · <span style="color:var(--bl);font-weight:700">🏨 Selected: ${currentStayName}</span>`
+      :` · <span style="color:var(--wn)">No stay selected yet</span>`;
+  }
+  html+=`</div>`;
+
+  html+=items.map(p=>{
+    const gl=p.a?gmapUrl(p.a):gmapCoord(p.lat,p.lng);
+    const gmDirect=(p.lat&&p.lng)?`https://www.google.com/maps/search/${encodeURIComponent(p.n)}/@${p.lat},${p.lng},17z`:gl;
+    const webLink=p.web||`https://www.google.com/search?q=${encodeURIComponent(p.n+' '+p.area+' Hokkaido')}&udm=2`;
+
+    // Determine card state for stays
+    let isThisSelected=false, isOtherSelected=false;
+    if(isStaysCat){
+      isThisSelected=currentStayName===p.n;
+      isOtherSelected=!!currentStayName&&!isThisSelected;
+    }
+    const isAdded=isStaysCat?isThisSelected:addedPicks.includes(p.id);
+
+    return`<div class="c-card ${isThisSelected?'added':''}${isStaysCat&&isThisSelected?' selected-stay':''}"><div class="c-bar b-${p.cat.substring(0,3)}"></div><div class="c-body">
+      <h4>${ICONS[p.cat]||'📌'} ${p.n}</h4>
+      <div class="c-stars">${'★'.repeat(p.stars)}${'☆'.repeat(5-p.stars)}</div>
+      <p>${p.d}</p>
+      ${p.a?`<p class="c-addr">📍 ${p.a}</p>`:''}
+      <p style="font-size:11px">📌 ${p.area} ${p.eld==='yes'?'<span class="badge b-grn">Elderly✓</span>':p.eld==='moderate'?'<span class="badge b-org">⚠</span>':''}</p>
+      <div class="c-tags">${p.tags.map(t=>`<span class="c-tag${t==='Food Guide'?' fg':''}">${t}</span>`).join('')}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin:6px 0 2px">
+        ${gmDirect?`<a class="gm-link" href="${gmDirect}" target="_blank" rel="noopener noreferrer">📍 Google Maps</a>`:''}
+        <a class="web-link" href="${webLink}" target="_blank" rel="noopener noreferrer">📷 Photos & Info</a>
+      </div>
+      <div class="c-acts">
+        ${isStaysCat?(
+          isThisSelected
+            ?`<span class="c-added">✅ Selected for Day ${TRIP[pickDay]?.day}</span><button class="c-undo" onclick="removeStayFromDay(${pickDay})">✕ Remove</button>`
+            :`<button class="c-add" onclick="addPickToDay('${p.id}',${pickDay})">${isOtherSelected?'🔄 Switch to this':'+ Select for Day '+TRIP[pickDay]?.day}</button>`
+        ):(
+          isAdded
+            ?`<span class="c-added">✅ Added to Day ${TRIP[pickDay]?.day}</span><button class="c-undo" onclick="undoPick('${p.id}')">↩ Undo</button>`
+            :`<button class="c-add" onclick="addPickToDay('${p.id}',${pickDay})">+ Add to Day ${TRIP[pickDay]?.day}</button>`
+        )}
+      </div></div></div>`;
+  }).join('');
+
+  grid.innerHTML=html;
+}
+function addPickToDay(id,dayIdx){
+  const p=PICKS.find(x=>x.id===id);if(!p)return;
+  const di=dayIdx!=null?dayIdx:pickDay;
+
+  // For accommodation: only 1 stay per day — remove any existing accommodation pick for this day
+  if(p.cat==='accommodation'){
+    const existing=customEntries.filter(e=>+e.day===di&&e.category==='accommodation');
+    existing.forEach(e=>{
+      customEntries=customEntries.filter(x=>x.id!==e.id);
+      // Also remove from addedPicks if it was a pick
+      const oldPick=PICKS.find(pk=>pk.n===e.name&&pk.cat==='accommodation');
+      if(oldPick)addedPicks=addedPicks.filter(x=>x!==oldPick.id);
+    });
+  }
+
+  customEntries.push({id:Date.now(),day:''+di,category:p.cat,name:p.n,time:p.t||'',address:p.a||'',lat:p.lat,lng:p.lng,desc:p.d,elderly:p.eld,elderlyNote:'',replaces:null,recommended:true});
+  if(!addedPicks.includes(id))addedPicks.push(id);
+  save();refreshAll();
+  toast(p.cat==='accommodation'?`🏨 Stay set: "${p.n}" for Day ${TRIP[di]?.day||di+1}`:`Added "${p.n}" to Day ${TRIP[di]?.day||di+1}`);
+}
+function addPick(id){addPickToDay(id,pickDay);}
+function undoPick(id){
+  addedPicks=addedPicks.filter(x=>x!==id);
+  const pick=PICKS.find(x=>x.id===id);
+  if(pick){const idx=customEntries.findIndex(e=>e.name===pick.n&&e.address===pick.a);if(idx>=0)customEntries.splice(idx,1);}
+  save();refreshAll();toast(`Removed "${pick?.n}"`,'warn');
+}
+function removeStayFromDay(dayIdx){
+  const existing=customEntries.filter(e=>+e.day===dayIdx&&e.category==='accommodation');
+  existing.forEach(e=>{
+    customEntries=customEntries.filter(x=>x.id!==e.id);
+    const oldPick=PICKS.find(pk=>pk.n===e.name&&pk.cat==='accommodation');
+    if(oldPick)addedPicks=addedPicks.filter(x=>x!==oldPick.id);
+  });
+  save();refreshAll();toast('Stay removed from Day '+(TRIP[dayIdx]?.day||dayIdx+1),'warn');
+}
+
+/* ════════════════════════════════════════
+   NAVIGATION
+   ════════════════════════════════════════ */
+document.getElementById('navTabs').addEventListener('click',e=>{const btn=e.target.closest('.tab');if(btn)switchPanel(btn.dataset.p);});
+function switchPanel(name){
+  document.querySelectorAll('.tab').forEach(t=>{const isOn=t.dataset.p===name;t.classList.toggle('on',isOn);t.setAttribute('aria-selected',isOn);});
+  document.querySelectorAll('.pn').forEach(p=>p.classList.toggle('on',p.id==='pn-'+name));
+  if(name==='map')setTimeout(()=>{if(map)map.invalidateSize();},150);
+  if(name==='itinerary')renderDay(currentDay);
+  if(name==='picks'){renderPickDays();renderPicks();}
+}
+
+/* ════════════════════════════════════════
+   MAP
+   ════════════════════════════════════════ */
+function createMarkerIcon(cat){
+  const color=COLORS[cat]||'#666';
+  return L.divIcon({html:`<div style="background:${color};width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.3);font-size:10px">${ICONS[cat]||'📌'}</div>`,className:'',iconSize:[22,22],iconAnchor:[11,11],popupAnchor:[0,-13]});
+}
+
+const DRIVE_WAYPOINTS=[[141.3488,43.0545],[142.3770,43.3350],[142.6840,43.3880],[142.3830,43.3413],[141.1637,42.9671],[141.1469,42.4932],[140.8420,42.5693],[140.7890,41.7687],[140.8220,41.7700]];
+
+async function fetchDrivingRoute(){
+  routeLayer.clearLayers();
+  const coords=DRIVE_WAYPOINTS.map(c=>c.join(',')).join(';');
+  try{
+    const resp=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
+    const data=await resp.json();
+    if(data.routes?.[0]){
+      const points=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+      L.polyline(points,{color:'#2980b9',weight:4,opacity:.85}).bindPopup(
+        '<b>🚗 Full Driving Route</b><br>Sapporo → Furano → Jozankei → Lake Toya → Hakodate<br>'+
+        '<a class="gm-link" href="https://www.google.com/maps/dir/Sapporo/Furano/Biei/Jozankei/Noboribetsu/Lake+Toya/Hakodate/Hakodate+Airport" target="_blank" rel="noopener noreferrer">📍 Open Full Route in Google Maps</a>'
+      ).addTo(routeLayer);
+    }
+  }catch(e){
+    console.warn('OSRM routing failed, using straight-line fallback:',e);
+    L.polyline(DRIVE_WAYPOINTS.map(c=>[c[1],c[0]]),{color:'#2980b9',weight:3,opacity:.6,dashArray:'6,6'}).bindPopup('<b>🚗 Approximate Route</b><br>Routing service unavailable — showing straight-line path.').addTo(routeLayer);
+  }
+  // Flight path
+  L.polyline([[35.5494,139.7798],[42.7752,141.6925]],{color:'#e74c3c',weight:2,opacity:.4,dashArray:'6,10'}).addTo(routeLayer);
+}
+
+function initMap(){
+  map=L.map('map').setView([42.9,141.3],7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(map);
+  markersLayer=L.layerGroup().addTo(map);
+  routeLayer=L.layerGroup().addTo(map);
+  fetchDrivingRoute();
+  populateMapMarkers();
+  populateMapDayFilter();
+}
+
+function populateMapMarkers(){
+  markersLayer.clearLayers();
+  const markers=getAllMarkers();
+  const dayVal=document.getElementById('mapDay')?.value||'all';
+  const checks={};
+  document.querySelectorAll('#mapCtrl input[type="checkbox"]').forEach(cb=>{checks[cb.dataset.cat]=cb.checked;});
+  markers.forEach(m=>{
+    if(dayVal!=='all'&&m.day!==+dayVal)return;
+    if(checks[m.cat]===false)return;
+    const gl=m.addr?gmapUrl(m.addr):gmapCoord(m.lat,m.lng);
+    const popup=`<b>${m.name}</b><br><em>Day ${m.day} · ${m.cat}</em><br>${m.desc||''}${m.addr?`<br><span style="font-size:11px;color:#2980b9">📍 ${m.addr}</span>`:''}${gl?`<br><a class="gm-link" href="${gl}" target="_blank" rel="noopener noreferrer">📍 Open in Google Maps</a>`:''}<br><a class="gm-link" style="background:#34a853" href="https://www.google.com/maps/@${m.lat},${m.lng},17z" target="_blank" rel="noopener noreferrer">🌍 Street View</a>`;
+    L.marker([m.lat,m.lng],{icon:createMarkerIcon(m.cat)}).bindPopup(popup).addTo(markersLayer);
+  });
+}
+
+function filterMap(){
+  populateMapMarkers();
+  const v=document.getElementById('mapDay').value;
+  if(v!=='all'){const dm=getAllMarkers().filter(m=>m.day===+v);if(dm.length)map.fitBounds(L.latLngBounds(dm.map(m=>[m.lat,m.lng])).pad(.3));}
+  else map.setView([42.5,141.3],7);
+}
+function fitAll(){const m=getAllMarkers();if(m.length)map.fitBounds(L.latLngBounds(m.map(x=>[x.lat,x.lng])).pad(.1));}
+function populateMapDayFilter(){const s=document.getElementById('mapDay');s.innerHTML='<option value="all">All Days</option>';TRIP.forEach(d=>{s.innerHTML+=`<option value="${d.day}">Day ${d.day} — ${d.dt}</option>`;});}
+
+/* ════════════════════════════════════════
+   PDF GENERATION (Print-to-PDF — cross-platform)
+   ════════════════════════════════════════ */
+function makePDF(){
+  toast('Preparing PDF…','info');
+  const arr=tripArrival(),end=lastDate();
+  const sections=[{k:'po',l:'📍 Points of Interest',c:'#27ae60'},{k:'di',l:'🍽️ Dining',c:'#e67e22'},{k:'at',l:'🎯 Activities',c:'#8854ad'},{k:'sn',l:'🍡 Snacks & Drinks',c:'#d63384'}];
+
+  let body=`<div style="background:linear-gradient(135deg,#0a1628,#16213e);color:#fff;padding:24px;text-align:center;border-radius:8px;margin-bottom:14px">
+    <p style="color:#d4a76a;font-size:11px;margin:0 0 4px;letter-spacing:1px">Produced by D. Chan</p>
+    <h1 style="font-size:22px;margin:0">🍁 Hokkaido Family Trip 2027 Itinerary</h1>
+    <p style="color:#d4a76a;margin:4px 0;font-size:12px">${fmtS(arr)} – ${fmtS(end)} · ${tripDays} Days / ${tripDays-1} Nights</p>
+    <p style="color:#d4a76a;font-size:11px">${tripFrom} → Tokyo Haneda → Hokkaido</p></div>`;
+
+  body+=`<div style="display:flex;gap:14px;margin-bottom:14px;font-size:11px;background:#f8f9fa;padding:10px;border-radius:6px;border:1px solid #ddd;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px"><b>✈️ Departure:</b> ${tripFrom}<br>${fmt(tripDepart)} · 1:35 PM</div>
+    <div style="flex:1;min-width:200px"><b>🛬 Arrival:</b> Tokyo Haneda<br>${fmt(arr)} · 7:00 PM JST · T3</div></div>`;
+
+  body+=`<div style="background:#eef6ff;border:1px solid #b3d4fc;border-radius:6px;padding:10px;margin-bottom:14px;font-size:11px">
+    <b>🗾 Driving Route:</b> Sapporo → Furano (~2.5h) → Jozankei (~2h) → Lake Toya (~2h) → Hakodate (~3h) → Airport (15min)<br>
+    <a href="https://www.google.com/maps/dir/Sapporo/Furano/Biei/Jozankei/Noboribetsu/Lake+Toya/Hakodate/Hakodate+Airport" style="color:#2980b9;font-size:10px">📍 View Full Route on Google Maps</a></div>`;
+
+  for(let i=0;i<TRIP.length;i++){
+    const m=getMergedDay(i);
+    body+=`<div style="border:1px solid #ddd;border-radius:6px;padding:12px;margin-bottom:10px;page-break-inside:avoid">
+      <h2 style="font-size:14px;color:#b5451b;border-bottom:2px solid #d4a76a;padding-bottom:3px;margin-bottom:7px">Day ${m.day} — ${m.dt} — ${m.ti} (${m.lo})</h2>`;
+    if(m.et)body+=`<div style="background:#fffde7;padding:3px 7px;border-radius:3px;font-size:10px;margin-bottom:5px">👴 ${m.et}</div>`;
+    if(m.dr){
+      const d=m.dr;
+      const drvLink=`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(d.f+', Hokkaido')}&destination=${encodeURIComponent(d.t+', Hokkaido')}`;
+      body+=`<h3 style="font-size:11px;background:#f1f3f5;padding:2px 5px;border-radius:3px;margin:5px 0 3px">🚗 ${d.f} → ${d.t} (${d.km}, ${d.du})</h3>
+        <div style="padding:2px 6px;border-left:3px solid #e74c3c;font-size:10px;margin-bottom:3px">${d.nt||''} <a href="${drvLink}" style="color:#2980b9;font-size:9px">📍 Route</a></div>`;
+    }
+    if(m.acc&&!m.acc._skipped){
+      const a=m.acc;
+      const al=a.address?gmapUrl(a.address):gmapCoord(a.lat,a.lng);
+      const adr=(a.lat&&a.lng)?`https://www.google.com/maps/search/${encodeURIComponent(a.name)}/@${a.lat},${a.lng},17z`:al;
+      body+=`<h3 style="font-size:11px;background:#f1f3f5;padding:2px 5px;border-radius:3px;margin:5px 0 3px">🏨 Accommodation</h3>
+        <div style="padding:2px 6px;border-left:3px solid #2980b9;font-size:10px;margin-bottom:3px"><b>${a.name}</b><br>📍 ${a.address||''}${adr?` <a href="${adr}" style="color:#2980b9;font-size:9px">📍 Google Maps ↗</a>`:''}<br>${a.notes||''}</div>`;
+    }
+    sections.forEach(s=>{
+      const items=(m[s.k]||[]).filter(x=>!x._skipped);
+      if(!items.length)return;
+      body+=`<h3 style="font-size:11px;background:#f1f3f5;padding:2px 5px;border-radius:3px;margin:5px 0 3px">${s.l}</h3>`;
+      items.forEach(it=>{
+        const il=it.address?gmapUrl(it.address):gmapCoord(it.lat,it.lng);
+        body+=`<div style="padding:2px 6px;border-left:3px solid ${s.c};font-size:10px;margin-bottom:2px">
+          <b>${it.name}</b>${it.time?' · ⏰ '+it.time:''}${it.elderly==='yes'?' · ✅ Elderly':''}${it.type?' · '+it.type:''}
+          <br>${it.desc||''}${it.address?'<br><span style="color:#2980b9;font-size:9px">📍 '+it.address+'</span>':''}${il?` <a href="${il}" style="color:#2980b9;font-size:9px">Maps↗</a>`:''}</div>`;
+      });
+    });
+    body+=`</div>`;
+  }
+
+  // All Links page
+  body+=`<div style="border:1px solid #ddd;border-radius:6px;padding:12px;page-break-before:always">
+    <h2 style="font-size:14px;color:#b5451b;margin-bottom:6px">📍 All Location Links</h2>
+    <p style="font-size:9px;color:#777;margin-bottom:6px">Click any link to open in Google Maps</p>`;
+  getAllMarkers().forEach(m=>{
+    const gl=m.addr?gmapUrl(m.addr):gmapCoord(m.lat,m.lng);
+    body+=`<div style="padding:1px 3px;font-size:9.5px;border-bottom:1px solid #f0f0f0"><b>Day ${m.day}</b> · ${ICONS[m.cat]||''} ${m.name}${gl?` — <a href="${gl}" style="color:#2980b9">Google Maps ↗</a>`:''}</div>`;
+  });
+  body+=`</div>`;
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width"><title>Hokkaido Trip 2027 — Produced by D. Chan</title>
+    <style>@media print{@page{margin:10mm 8mm}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:11px;color:#222;line-height:1.5;max-width:760px;margin:0 auto;padding:14px}
+    a{color:#2980b9}h1,h2,h3{margin:0}
+    .no-print{text-align:center;padding:18px;background:#e8f5e9;border-radius:10px;margin-bottom:16px}
+    .no-print h2{color:#27ae60;margin-bottom:6px;font-size:18px}
+    .no-print button{background:#27ae60;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer}
+    .no-print p{color:#666;font-size:12px;margin-top:6px}
+    </style></head><body>
+    <div class="no-print">
+      <h2>🍁 Hokkaido Trip 2027 Itinerary</h2>
+      <p style="color:#999;font-size:11px;margin-bottom:8px">Produced by D. Chan</p>
+      <button onclick="window.print()">📥 Save as PDF / Print</button>
+      <p>In the print dialog, select <b>"Save as PDF"</b> as the destination, then click Save.<br>All links will remain clickable in the saved PDF.</p>
+    </div>
+    ${body}
+    <script>setTimeout(function(){window.print()},800)<\/script>
+    </body></html>`;
+
+  const w=window.open('','_blank');
+  if(!w){toast('Please allow popups to generate PDF! Check your browser settings.','warn');return;}
+  w.document.write(html);
+  w.document.close();
+  toast('Print window opened — save as PDF','info');
+}
+
+/* ════════════════════════════════════════
+   SMART ITINERARY GENERATOR
+   ════════════════════════════════════════ */
+const HOKKAIDO_ROUTE=[
+  {lo:"Sapporo",areas:["Sapporo","Chitose Airport","Otaru"]},
+  {lo:"Furano",areas:["Furano","Biei (near Furano)"]},
+  {lo:"Jozankei",areas:["Jozankei"]},
+  {lo:"Noboribetsu",areas:["Noboribetsu"]},
+  {lo:"Lake Toya",areas:["Lake Toya","Near Lake Toya"]},
+  {lo:"Hakodate",areas:["Hakodate","En route to Hakodate"]}
+];
+const DRIVES=[
+  {f:"Sapporo",t:"Furano",km:"~145 km",du:"~2.5 hours",nt:"Pick up rental car. Drive via Hokkaido Expressway. Stop at a 道の駅 halfway."},
+  {f:"Furano",t:"Jozankei",km:"~120 km",du:"~2 hours",nt:"Scenic drive through central Hokkaido mountains. Beautiful autumn foliage."},
+  {f:"Jozankei",t:"Noboribetsu",km:"~130 km",du:"~2 hours",nt:"Drive south through mountain roads. Rest stop at Shikotsu Lake area."},
+  {f:"Jozankei",t:"Lake Toya",km:"~100 km",du:"~2 hours",nt:"Optional detour to Noboribetsu Jigokudani. Adds ~30 min."},
+  {f:"Noboribetsu",t:"Lake Toya",km:"~55 km",du:"~1 hour",nt:"Short scenic drive along the coast."},
+  {f:"Lake Toya",t:"Hakodate",km:"~170 km",du:"~3 hours",nt:"Longest drive. Take Hokkaido Expressway. Rest at Onuma area."},
+  {f:"Hakodate",t:"Hakodate Airport",km:"~10 km",du:"~15 min",nt:"Return rental car at airport by 9:00 AM."}
+];
+
+function generateItinerary(){
+  applyCfg();
+  if(tripDays<3){toast('Need at least 3 days (arrival + Hokkaido + departure)','warn');return;}
+  if(!confirm(`Generate a ${tripDays}-day itinerary with 10 Critic's Picks per category per day?\n\n• Day 1: Arrive Tokyo Haneda\n• Days 2–${tripDays-1}: Hokkaido route (10 Dining, 10 POI, 10 Activities, 10 Snacks, 10 Stays per day)\n• Day ${tripDays}: Fly Hakodate → Tokyo → ${tripFrom}\n\nExisting custom entries will be cleared.`))return;
+
+  customEntries=[];skippedEntries=[];addedPicks=[];save();
+
+  // Collect picks by category
+  const byC={dining:[],poi:[],activity:[],snacks:[],accommodation:[]};
+  PICKS.forEach(p=>{if(byC[p.cat])byC[p.cat].push(p);});
+
+  const hDays=tripDays-2;
+  if(hDays<1){toast('Not enough days for Hokkaido','warn');return;}
+
+  // Assign Hokkaido days to route stops
+  const stops=[];
+  if(hDays<=3){
+    stops.push({lo:"Sapporo",days:1},{lo:"Hakodate",days:Math.max(1,hDays-1)});
+  } else if(hDays<=5){
+    stops.push({lo:"Sapporo",days:2},{lo:"Furano",days:1},{lo:"Hakodate",days:hDays-3});
+  } else if(hDays<=8){
+    const rem=hDays-5;
+    stops.push({lo:"Sapporo",days:2},{lo:"Furano",days:1},{lo:"Jozankei",days:1},{lo:"Lake Toya",days:1+Math.min(rem,1)},{lo:"Hakodate",days:1+Math.max(0,rem-1)});
+  } else {
+    const extra=hDays-8;
+    const sapD=2+Math.floor(extra*0.25);const toyD=2+Math.floor(extra*0.2);const hakD=2+Math.floor(extra*0.25);
+    const furD=1+Math.floor(extra*0.15);const jozD=1+Math.floor(extra*0.15);
+    const assigned=sapD+furD+jozD+toyD+hakD;
+    stops.push({lo:"Sapporo",days:sapD},{lo:"Furano",days:furD},{lo:"Jozankei",days:jozD},{lo:"Lake Toya",days:toyD},{lo:"Hakodate",days:hakD+(hDays-assigned)});
+  }
+
+  const newTmpl=[];
+  newTmpl.push(TMPL[0]); // Day 1: Arrival at Haneda
+
+  // Track used picks per category — reset cycle when exhausted
+  let usedSets={dining:new Set(),poi:new Set(),activity:new Set(),snacks:new Set(),accommodation:new Set()};
+
+  function getPicksFor(cat,area,count){
+    const route=HOKKAIDO_ROUTE.find(r=>r.lo===area);
+    const areas=route?route.areas:[area];
+    const allInCat=byC[cat];
+    // Reset used set if we've exhausted the pool
+    if(usedSets[cat].size>=allInCat.length)usedSets[cat]=new Set();
+    const pool=allInCat.filter(p=>!usedSets[cat].has(p.id));
+    // Score: local match first, then global, then others
+    const scored=pool.map(p=>{
+      const isLocal=areas.some(a=>p.area.toLowerCase().includes(a.toLowerCase())||a.toLowerCase().includes(p.area.toLowerCase()));
+      const isGlobal=p.area==='All Hokkaido'||p.area==='Airports & shops'||p.area==='Airports';
+      return{p,score:(isLocal?1000:0)+(isGlobal?500:0)+p.stars*10+Math.random()*5};
+    }).sort((a,b)=>b.score-a.score);
+    const result=scored.slice(0,count).map(s=>s.p);
+    result.forEach(p=>usedSets[cat].add(p.id));
+    // If we still need more (pool was too small even after reset), fill from full list
+    if(result.length<count){
+      usedSets[cat]=new Set();
+      const extra=allInCat.filter(p=>!result.find(r=>r.id===p.id))
+        .sort((a,b)=>b.stars-a.stars).slice(0,count-result.length);
+      result.push(...extra);
+      extra.forEach(p=>usedSets[cat].add(p.id));
+    }
+    return result;
+  }
+
+  function pickToEntry(p){
+    return{n:p.n,d:p.d,a:p.a||'',lat:p.lat,lng:p.lng,t:p.t||'',tp:p.tp||'',e:p.eld||'yes',en:'',rc:p.stars>=4?1:0};
+  }
+  function pickToAcc(p){
+    return{n:p.n,a:p.a||'',lat:p.lat,lng:p.lng,nt:p.d,e:p.eld||'yes',en:''};
+  }
+
+  for(let si=0;si<stops.length;si++){
+    const stop=stops[si];
+    const isFirst=si===0;
+    const prevStop=si>0?stops[si-1]:null;
+
+    for(let sd=0;sd<stop.days;sd++){
+      const isDriveDay=sd===0&&prevStop;
+      let drv=null;
+      if(isDriveDay){
+        drv=DRIVES.find(d=>d.f===prevStop.lo&&d.t===stop.lo)||
+            DRIVES.find(d=>d.t===stop.lo)||
+            {f:prevStop.lo,t:stop.lo,km:"~100 km",du:"~2 hours",nt:"Scenic Hokkaido drive."};
+      }
+      const isFlyToSapporo=isFirst&&sd===0;
+      let title,et;
+      if(isFlyToSapporo){
+        title="Fly to Sapporo";
+        et="Flight ~1.5h. Arrive New Chitose, JR to Sapporo (37 min). Explore city afternoon/evening.";
+      } else if(isDriveDay){
+        title=`Drive to ${stop.lo}`;
+        et=`Drive from ${prevStop.lo} to ${stop.lo} (${drv.du}). Settle in, explore area.`;
+      } else if(stop.days>1&&sd>0){
+        title=sd===1&&stop.days>2?`${stop.lo} Sightseeing`:`${stop.lo} Day ${sd+1}`;
+        et=`Explore ${stop.lo} at leisure. ${sd===1?'Rest day option for elderly.':''}`;
+      } else {
+        title=`${stop.lo} Sightseeing`;
+        et=`Full day exploring ${stop.lo}.`;
+      }
+
+      // 10 picks per category per day
+      const pois=getPicksFor('poi',stop.lo,10);
+      const dins=getPicksFor('dining',stop.lo,10);
+      const acts=getPicksFor('activity',stop.lo,10);
+      const snks=getPicksFor('snacks',stop.lo,10);
+      const accs=getPicksFor('accommodation',stop.lo,10);
+
+      newTmpl.push({
+        ti:title,lo:stop.lo,
+        dr:isFlyToSapporo?null:drv,
+        ac:accs.length?pickToAcc(accs[0]):(sd>0&&newTmpl.length>1?newTmpl[newTmpl.length-1].ac:null),
+        po:pois.map(p=>pickToEntry(p)),
+        di:dins.map(p=>pickToEntry(p)),
+        at:acts.map(p=>pickToEntry(p)),
+        sn:snks.map(p=>pickToEntry(p)),
+        et:et,
+        _stays:accs.map(p=>pickToEntry(p))
+      });
+    }
+  }
+
+  // Last day: Departure
+  newTmpl.push({
+    ti:"Departure — Fly Home",lo:"Hakodate → Tokyo → "+tripFrom,
+    dr:{f:"Hakodate",t:"Hakodate Airport",km:"~10 km",du:"~15 min",nt:"Return rental car at Hakodate Airport by 9:00 AM."},
+    ac:null,
+    po:[{n:"Hakodate Airport",d:"Return rental car. Airport has souvenir shops for last-minute omiyage.",a:"511 Takamatsu-cho, Hakodate, Hokkaido 042-0952, Japan",lat:41.7700,lng:140.8220,t:"9:00 AM",e:"yes",en:"Small airport, very easy to navigate."},
+        {n:"Tokyo Haneda Airport",d:"Transfer at Haneda. Connect to international flight back to "+tripFrom+".",a:"Hanedakuko, Ota-ku, Tokyo 144-0041, Japan",lat:35.5494,lng:139.7798,t:"3:00 PM",e:"yes",en:"Allow 2+ hours for international transfer."}],
+    di:[{n:"Airport Last Meal",d:"Last Hokkaido meal! Try ebisoba ramen or grab Seicomart bento.",a:"511 Takamatsu-cho, Hakodate, Japan",lat:41.7700,lng:140.8220,t:"10:00 AM",tp:"Various",e:"yes"},
+        {n:"Haneda Departure Dining",d:"Dinner at Haneda T3 international terminal before departure.",a:"Haneda Airport T3, Ota-ku, Tokyo",lat:35.5494,lng:139.7798,t:"6:00 PM",tp:"Various",e:"yes"}],
+    at:[],
+    sn:[{n:"Airport Omiyage Shopping",d:"Last chance for souvenirs — Shiroi Koibito, Royce, Rokkatei!",a:"511 Takamatsu-cho, Hakodate, Japan",lat:41.7700,lng:140.8220,t:"9:30 AM",e:"yes"}],
+    et:`Departure day. Hakodate → Tokyo Haneda (flight ~1.5h) → Connect to international flight → ${tripFrom}. Pack the night before. Return car by 9AM.`
+  });
+
+  while(newTmpl.length>tripDays)newTmpl.splice(newTmpl.length-2,1);
+  while(newTmpl.length<tripDays)newTmpl.splice(newTmpl.length-1,0,{ti:"Free Day",lo:"Hokkaido",dr:null,ac:newTmpl[newTmpl.length-2]?.ac||null,po:[],di:[],at:[],sn:[],et:"Open day — explore at leisure or rest!"});
+
+  TMPL.length=0;
+  newTmpl.forEach(t=>TMPL.push(t));
+  rebuildTrip();
+  renderDayNav();
+  toast(`✅ Generated ${tripDays}-day itinerary — 10 picks per category per day!`);
+}
+
+/* ════════════════════════════════════════
+   SAVE AS STANDALONE HTML
+   ════════════════════════════════════════ */
+function saveAsHTML(){
+  toast('Building full app with your data…','info');
+
+  // Get the full current page HTML
+  const docHTML=document.documentElement.outerHTML;
+
+  // Build a data injection script that overrides the defaults on load
+  const stateScript=`
+<script>
+// ═══ USER DATA — injected by Save HTML on ${new Date().toLocaleString()} ═══
+(function(){
+  // Override trip config
+  var _cfg=${JSON.stringify({from:tripFrom,depart:iso(tripDepart),days:tripDays})};
+  localStorage.setItem('trip_cfg',JSON.stringify(_cfg));
+
+  // Override custom entries, skipped entries, added picks
+  var _ce=${JSON.stringify(customEntries)};
+  var _sk=${JSON.stringify(skippedEntries)};
+  var _ap=${JSON.stringify(addedPicks)};
+  localStorage.setItem('trip_ce',JSON.stringify(_ce));
+  localStorage.setItem('trip_sk',JSON.stringify(_sk));
+  localStorage.setItem('trip_ap',JSON.stringify(_ap));
+
+  // Override TMPL with current generated itinerary
+  var _tmpl=${JSON.stringify(TMPL.map(t=>{
+    // Serialize each TMPL entry, converting shorthand keys to full
+    const o={ti:t.ti,lo:t.lo,dr:t.dr,ac:t.ac,po:t.po||[],di:t.di||[],at:t.at||[],sn:t.sn||[],et:t.et||''};
+    if(t._stays)o._stays=t._stays;
+    return o;
+  }))};
+
+  // Wait for DOM, then replace TMPL before init runs
+  var origInit=null;
+  document.addEventListener('DOMContentLoaded',function _inject(){
+    // Patch TMPL array
+    if(typeof TMPL!=='undefined'){
+      TMPL.length=0;
+      _tmpl.forEach(function(t){TMPL.push(t);});
+    }
+    // Patch trip config vars
+    if(typeof tripFrom!=='undefined'){
+      tripFrom=_cfg.from||'Vancouver';
+      tripDepart=new Date(_cfg.depart+'T12:00:00');
+      tripDays=_cfg.days||10;
+    }
+    // Patch state
+    if(typeof customEntries!=='undefined'){
+      customEntries.length=0;_ce.forEach(function(e){customEntries.push(e);});
+      skippedEntries.length=0;_sk.forEach(function(e){skippedEntries.push(e);});
+      addedPicks.length=0;_ap.forEach(function(e){addedPicks.push(e);});
+    }
+  },true); // useCapture=true to run before the app's own DOMContentLoaded
+})();
+<\/script>`;
+
+  // Inject the state script right before </head> so it runs before the app JS
+  const attrs=Array.from(document.documentElement.attributes).map(a=>a.name+'="'+a.value+'"').join(' ');
+  let fullHTML='<!DOCTYPE html>\n<html'+(attrs?' '+attrs:'')+'>\n';
+
+  // Get head content and inject state script before </head>
+  const headHTML=document.head.innerHTML;
+  fullHTML+='<head>\n'+headHTML+'\n'+stateScript+'\n</head>\n';
+
+  // Get body content
+  fullHTML+='<body>\n'+document.body.innerHTML+'\n';
+
+  // Re-include all script tags (they don't survive innerHTML)
+  document.querySelectorAll('body > script').forEach(s=>{
+    if(s.src){
+      fullHTML+=`<script src="${s.src}"${s.crossOrigin?' crossorigin="'+s.crossOrigin+'"':''}><\/script>\n`;
+    } else {
+      fullHTML+=`<script>${s.textContent}<\/script>\n`;
+    }
+  });
+
+  fullHTML+='</body>\n</html>';
+
+  // Download
+  const blob=new Blob([fullHTML],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const dateStr=iso(tripArrival()).replace(/-/g,'');
+  a.href=url;
+  a.download=`Hokkaido_Trip_${tripDays}days_${dateStr}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(`✅ Saved full app: ${a.download}`);
+}
+
+/* ════════════════════════════════════════
+   REFRESH & INIT
+   ════════════════════════════════════════ */
+function refreshAll(){
+  renderDay(currentDay);
+  renderCustomList();
+  updateStats();
+  renderRecs();
+  renderPicks();
+  if(map)populateMapMarkers();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  loadCfg();
+  TRIP=buildTrip();
+  renderFlight();
+  populateDaySelect();
+  renderDayNav();
+  renderDay(0);
+  renderCustomList();
+  updateStats();
+  renderRecs();
+  renderPickDays();
+  renderPicks();
+  setTimeout(initMap,300);
+});
+</script>
+</body>
+</html>
