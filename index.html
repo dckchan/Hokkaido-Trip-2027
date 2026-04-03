@@ -369,8 +369,12 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
       <div class="leg-i"><div class="leg-dot" style="background:#d63384"></div> Snacks</div>
       <div class="leg-i"><div class="leg-dot" style="background:#e74c3c"></div> Transport</div>
       <div class="leg-i" style="margin-top:3px;border-top:1px solid #eee;padding-top:3px">
-        <div style="width:16px;height:3px;background:#2980b9;border-radius:2px"></div> Driving Route
+        <div style="width:20px;height:4px;background:#1a3a6b;border-radius:2px"></div> Daily Drive
       </div>
+      <div class="leg-i">
+        <div style="width:20px;height:2px;background:#e74c3c;border-radius:2px;border-top:1px dashed #e74c3c"></div> Flight
+      </div>
+      <div style="font-size:10px;color:#888;margin-top:3px;border-top:1px solid #eee;padding-top:3px">Click route lines<br>for distance & time</div>
     </div>
   </div>
 </div>
@@ -1228,27 +1232,72 @@ function createMarkerIcon(cat){
   return L.divIcon({html:`<div style="background:${color};width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.3);font-size:10px">${ICONS[cat]||'📌'}</div>`,className:'',iconSize:[22,22],iconAnchor:[11,11],popupAnchor:[0,-13]});
 }
 
-const DRIVE_WAYPOINTS=[[141.3488,43.0545],[142.3770,43.3350],[142.6840,43.3880],[142.3830,43.3413],[141.1637,42.9671],[141.1469,42.4932],[140.8420,42.5693],[140.7890,41.7687],[140.8220,41.7700]];
+// Location coordinates for route segments
+const ROUTE_COORDS={
+  "Sapporo":[43.0545,141.3488],"Furano":[43.3413,142.3830],"Biei":[43.3880,142.6840],
+  "Jozankei":[42.9671,141.1637],"Noboribetsu":[42.4932,141.1469],"Lake Toya":[42.5693,140.8420],
+  "Hakodate":[41.7687,140.7890],"Hakodate Airport":[41.7700,140.8220],
+  "Tokyo":[35.5494,139.7798],"New Chitose":[42.7752,141.6925]
+};
+const DARK_BLUE='#1a3a6b';
+const SEG_COLORS=['#1a3a6b','#1e4d8c','#22609e','#2674b0','#2980b9','#3498db','#5dade2','#85c1e9'];
 
 async function fetchDrivingRoute(){
   routeLayer.clearLayers();
-  const coords=DRIVE_WAYPOINTS.map(c=>c.join(',')).join(';');
-  try{
-    const resp=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
-    const data=await resp.json();
-    if(data.routes?.[0]){
-      const points=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
-      L.polyline(points,{color:'#2980b9',weight:4,opacity:.85}).bindPopup(
-        '<b>🚗 Full Driving Route</b><br>Sapporo → Furano → Jozankei → Lake Toya → Hakodate<br>'+
-        '<a class="gm-link" href="https://www.google.com/maps/dir/Sapporo/Furano/Biei/Jozankei/Noboribetsu/Lake+Toya/Hakodate/Hakodate+Airport" target="_blank" rel="noopener noreferrer">📍 Open Full Route in Google Maps</a>'
-      ).addTo(routeLayer);
+
+  // Collect driving segments from TRIP data
+  const segments=[];
+  for(let i=0;i<TRIP.length;i++){
+    const m=getMergedDay(i);
+    if(m.dr){
+      const d=m.dr;
+      const fromCoord=ROUTE_COORDS[d.f]||ROUTE_COORDS[Object.keys(ROUTE_COORDS).find(k=>d.f.includes(k))];
+      const toCoord=ROUTE_COORDS[d.t]||ROUTE_COORDS[Object.keys(ROUTE_COORDS).find(k=>d.t.includes(k))];
+      if(fromCoord&&toCoord){
+        segments.push({day:m.day,from:d.f,to:d.t,km:d.km,du:d.du,nt:d.nt||'',fromLL:fromCoord,toLL:toCoord,idx:i});
+      }
     }
-  }catch(e){
-    console.warn('OSRM routing failed, using straight-line fallback:',e);
-    L.polyline(DRIVE_WAYPOINTS.map(c=>[c[1],c[0]]),{color:'#2980b9',weight:3,opacity:.6,dashArray:'6,6'}).bindPopup('<b>🚗 Approximate Route</b><br>Routing service unavailable — showing straight-line path.').addTo(routeLayer);
   }
-  // Flight path
-  L.polyline([[35.5494,139.7798],[42.7752,141.6925]],{color:'#e74c3c',weight:2,opacity:.4,dashArray:'6,10'}).addTo(routeLayer);
+
+  // Draw each segment
+  for(let si=0;si<segments.length;si++){
+    const seg=segments[si];
+    const color=SEG_COLORS[si%SEG_COLORS.length];
+    const fromLngLat=seg.fromLL[1]+','+seg.fromLL[0];
+    const toLngLat=seg.toLL[1]+','+seg.toLL[0];
+    const gmLink=`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(seg.from+', Hokkaido')}&destination=${encodeURIComponent(seg.to+', Hokkaido')}`;
+    const popupHTML=`<div style="min-width:180px">
+      <b style="color:${DARK_BLUE};font-size:14px">Day ${seg.day}</b><br>
+      <b>🚗 ${seg.from} → ${seg.to}</b><br>
+      <span style="font-size:13px">📏 ${seg.km} · ⏱️ ${seg.du}</span><br>
+      <span style="font-size:11px;color:#555">${seg.nt}</span><br>
+      <a class="gm-link" href="${gmLink}" target="_blank" rel="noopener noreferrer" style="margin-top:4px">📍 Google Maps Route</a>
+    </div>`;
+
+    try{
+      const resp=await fetch(`https://router.project-osrm.org/route/v1/driving/${fromLngLat};${toLngLat}?overview=full&geometries=geojson`);
+      const data=await resp.json();
+      if(data.routes?.[0]){
+        const points=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+        L.polyline(points,{color:DARK_BLUE,weight:5,opacity:.9}).bindPopup(popupHTML).addTo(routeLayer);
+        // Add day label at midpoint
+        const mid=points[Math.floor(points.length/2)];
+        L.marker(mid,{icon:L.divIcon({html:`<div style="background:${DARK_BLUE};color:#fff;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);border:2px solid #fff">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(routeLayer);
+      } else throw new Error('No route');
+    }catch(e){
+      // Fallback: straight line
+      L.polyline([seg.fromLL,seg.toLL],{color:DARK_BLUE,weight:4,opacity:.7,dashArray:'8,6'}).bindPopup(popupHTML).addTo(routeLayer);
+      const mid=[(seg.fromLL[0]+seg.toLL[0])/2,(seg.fromLL[1]+seg.toLL[1])/2];
+      L.marker(mid,{icon:L.divIcon({html:`<div style="background:${DARK_BLUE};color:#fff;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);border:2px solid #fff">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(routeLayer);
+    }
+  }
+
+  // Flight paths (dashed red)
+  L.polyline([[35.5494,139.7798],[42.7752,141.6925]],{color:'#e74c3c',weight:2,opacity:.5,dashArray:'6,10'}).bindPopup('<b>✈️ Flight: Tokyo Haneda → New Chitose</b><br>~1.5 hours').addTo(routeLayer);
+  // Return flight
+  if(TRIP.length>2){
+    L.polyline([[41.7700,140.8220],[35.5494,139.7798]],{color:'#e74c3c',weight:2,opacity:.5,dashArray:'6,10'}).bindPopup('<b>✈️ Return: Hakodate → Tokyo Haneda</b><br>~1.5 hours').addTo(routeLayer);
+  }
 }
 
 function initMap(){
@@ -1646,7 +1695,7 @@ function refreshAll(){
   updateStats();
   renderRecs();
   renderPicks();
-  if(map)populateMapMarkers();
+  if(map){populateMapMarkers();fetchDrivingRoute();}
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
