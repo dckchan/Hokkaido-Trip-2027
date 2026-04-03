@@ -350,6 +350,7 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
 <div class="pn" id="pn-map">
   <div class="map-ctrl" id="mapCtrl">
     <select id="mapDay" onchange="filterMap()"><option value="all">All Days</option></select>
+    <select id="mapRoute" onchange="filterRoute()"><option value="all">🚗 All Routes</option></select>
     <label><input type="checkbox" checked onchange="filterMap()" data-cat="accommodation"> 🏨</label>
     <label><input type="checkbox" checked onchange="filterMap()" data-cat="poi"> 📍</label>
     <label><input type="checkbox" checked onchange="filterMap()" data-cat="dining"> 🍽️</label>
@@ -930,6 +931,18 @@ function renderDay(idx){
   if(!m)return;
   const el=document.getElementById('dayContent');
   let h=`<div class="d-header"><div class="d-num">${m.day}</div><div class="d-info"><h2>${m.ti}</h2><p>${m.dt} · ${m.lo}</p></div></div>`;
+  // Driving summary for the whole trip
+  const allDrives=[];
+  for(let di=0;di<TRIP.length;di++){const dd=getMergedDay(di);if(dd&&dd.dr)allDrives.push({day:dd.day,idx:di,dr:dd.dr});}
+  if(allDrives.length){
+    h+=`<div class="sec" style="background:#f0f4ff;border-left-color:#1a3a6b;border-left-width:4px;margin-bottom:10px"><h3 style="color:#1a3a6b;margin-bottom:6px">🚗 Driving Summary — ${allDrives.length} Segments</h3><div style="display:flex;gap:6px;flex-wrap:wrap">`;
+    allDrives.forEach(s=>{
+      const isCurrent=s.day===m.day;
+      const gmLink=`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(s.dr.f+', Hokkaido, Japan')}&destination=${encodeURIComponent(s.dr.t+', Hokkaido, Japan')}`;
+      h+=`<a href="${gmLink}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:600;text-decoration:none;border:2px solid ${isCurrent?'#1a3a6b':'#ccc'};background:${isCurrent?'#1a3a6b':'#fff'};color:${isCurrent?'#fff':'#333'};white-space:nowrap;cursor:pointer" onclick="event.stopPropagation()"><span style="font-weight:800">D${s.day}</span> ${s.dr.f}→${s.dr.t}<br><span style="font-size:10px;opacity:.8">📏${s.dr.km} ⏱️${s.dr.du}</span></a>`;
+    });
+    h+=`</div></div>`;
+  }
   if(m.et)h+=`<div class="sec s-eld"><h3>👴 Senior Travel Notes (5 Pax)</h3><p>${m.et}</p></div>`;
   if(m.dr){const d=m.dr;h+=`<div class="sec s-drv"><h3>🚗 Driving: ${d.f} → ${d.t}</h3><p>📏 ${d.km} · ⏱️ ${d.du}</p>${d.nt?`<p>📝 ${d.nt}</p>`:''}<a class="gm-link" href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(d.f+', Hokkaido, Japan')}&destination=${encodeURIComponent(d.t+', Hokkaido, Japan')}" target="_blank" rel="noopener noreferrer">🗺️ Google Maps Route</a></div>`;}
   // Accommodation
@@ -1242,14 +1255,17 @@ const ROUTE_COORDS={
 const DARK_BLUE='#1a3a6b';
 const SEG_COLORS=['#1a3a6b','#1e4d8c','#22609e','#2674b0','#2980b9','#3498db','#5dade2','#85c1e9'];
 
+let routeSegments=[]; // {day, layerGroup, fromLL, toLL}
+
 async function fetchDrivingRoute(){
   routeLayer.clearLayers();
+  routeSegments=[];
 
   // Collect driving segments from TRIP data
   const segments=[];
   for(let i=0;i<TRIP.length;i++){
     const m=getMergedDay(i);
-    if(m.dr){
+    if(m&&m.dr){
       const d=m.dr;
       const fromCoord=ROUTE_COORDS[d.f]||ROUTE_COORDS[Object.keys(ROUTE_COORDS).find(k=>d.f.includes(k))];
       const toCoord=ROUTE_COORDS[d.t]||ROUTE_COORDS[Object.keys(ROUTE_COORDS).find(k=>d.t.includes(k))];
@@ -1259,10 +1275,10 @@ async function fetchDrivingRoute(){
     }
   }
 
-  // Draw each segment
+  // Draw each segment into its own layer group
   for(let si=0;si<segments.length;si++){
     const seg=segments[si];
-    const color=SEG_COLORS[si%SEG_COLORS.length];
+    const segLayer=L.layerGroup().addTo(routeLayer);
     const fromLngLat=seg.fromLL[1]+','+seg.fromLL[0];
     const toLngLat=seg.toLL[1]+','+seg.toLL[0];
     const gmLink=`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(seg.from+', Hokkaido')}&destination=${encodeURIComponent(seg.to+', Hokkaido')}`;
@@ -1279,24 +1295,63 @@ async function fetchDrivingRoute(){
       const data=await resp.json();
       if(data.routes?.[0]){
         const points=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
-        L.polyline(points,{color:DARK_BLUE,weight:5,opacity:.9}).bindPopup(popupHTML).addTo(routeLayer);
-        // Add day label at midpoint
+        L.polyline(points,{color:DARK_BLUE,weight:5,opacity:.9}).bindPopup(popupHTML).addTo(segLayer);
         const mid=points[Math.floor(points.length/2)];
-        L.marker(mid,{icon:L.divIcon({html:`<div style="background:${DARK_BLUE};color:#fff;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);border:2px solid #fff">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(routeLayer);
+        L.marker(mid,{icon:L.divIcon({html:`<div style="background:${DARK_BLUE};color:#fff;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);border:2px solid #fff">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(segLayer);
       } else throw new Error('No route');
     }catch(e){
-      // Fallback: straight line
-      L.polyline([seg.fromLL,seg.toLL],{color:DARK_BLUE,weight:4,opacity:.7,dashArray:'8,6'}).bindPopup(popupHTML).addTo(routeLayer);
+      L.polyline([seg.fromLL,seg.toLL],{color:DARK_BLUE,weight:4,opacity:.7,dashArray:'8,6'}).bindPopup(popupHTML).addTo(segLayer);
       const mid=[(seg.fromLL[0]+seg.toLL[0])/2,(seg.fromLL[1]+seg.toLL[1])/2];
-      L.marker(mid,{icon:L.divIcon({html:`<div style="background:${DARK_BLUE};color:#fff;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);border:2px solid #fff">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(routeLayer);
+      L.marker(mid,{icon:L.divIcon({html:`<div style="background:${DARK_BLUE};color:#fff;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);border:2px solid #fff">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(segLayer);
     }
+    routeSegments.push({day:seg.day,layer:segLayer,fromLL:seg.fromLL,toLL:seg.toLL,from:seg.from,to:seg.to,km:seg.km,du:seg.du});
   }
 
-  // Flight paths (dashed red)
-  L.polyline([[35.5494,139.7798],[42.7752,141.6925]],{color:'#e74c3c',weight:2,opacity:.5,dashArray:'6,10'}).bindPopup('<b>✈️ Flight: Tokyo Haneda → New Chitose</b><br>~1.5 hours').addTo(routeLayer);
-  // Return flight
+  // Flight paths (in their own layer, always shown)
+  const flightLayer=L.layerGroup().addTo(routeLayer);
+  L.polyline([[35.5494,139.7798],[42.7752,141.6925]],{color:'#e74c3c',weight:2,opacity:.5,dashArray:'6,10'}).bindPopup('<b>✈️ Flight: Tokyo Haneda → New Chitose</b><br>~1.5 hours').addTo(flightLayer);
   if(TRIP.length>2){
-    L.polyline([[41.7700,140.8220],[35.5494,139.7798]],{color:'#e74c3c',weight:2,opacity:.5,dashArray:'6,10'}).bindPopup('<b>✈️ Return: Hakodate → Tokyo Haneda</b><br>~1.5 hours').addTo(routeLayer);
+    L.polyline([[41.7700,140.8220],[35.5494,139.7798]],{color:'#e74c3c',weight:2,opacity:.5,dashArray:'6,10'}).bindPopup('<b>✈️ Return: Hakodate → Tokyo Haneda</b><br>~1.5 hours').addTo(flightLayer);
+  }
+  routeSegments.push({day:0,layer:flightLayer,from:'Flights',to:'',km:'',du:''});
+
+  populateRouteDayFilter();
+}
+
+function populateRouteDayFilter(){
+  const s=document.getElementById('mapRoute');
+  if(!s)return;
+  s.innerHTML='<option value="all">🚗 All Routes</option>';
+  routeSegments.forEach(seg=>{
+    if(seg.day===0)return; // skip flight entry
+    s.innerHTML+=`<option value="${seg.day}">D${seg.day}: ${seg.from}→${seg.to} (${seg.km})</option>`;
+  });
+}
+
+function filterRoute(){
+  const v=document.getElementById('mapRoute')?.value||'all';
+  routeSegments.forEach(seg=>{
+    if(seg.day===0){
+      // Flights always visible
+      if(!routeLayer.hasLayer(seg.layer))routeLayer.addLayer(seg.layer);
+      return;
+    }
+    if(v==='all'){
+      if(!routeLayer.hasLayer(seg.layer))routeLayer.addLayer(seg.layer);
+    } else {
+      if(+v===seg.day){
+        if(!routeLayer.hasLayer(seg.layer))routeLayer.addLayer(seg.layer);
+      } else {
+        if(routeLayer.hasLayer(seg.layer))routeLayer.removeLayer(seg.layer);
+      }
+    }
+  });
+  // Zoom to selected route segment
+  if(v!=='all'){
+    const seg=routeSegments.find(s=>s.day===+v);
+    if(seg&&seg.fromLL&&seg.toLL){
+      map.fitBounds(L.latLngBounds([seg.fromLL,seg.toLL]).pad(.4));
+    }
   }
 }
 
