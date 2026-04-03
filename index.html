@@ -123,8 +123,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Ar
 .map-ctrl select{padding:6px 8px;border-radius:6px;border:1px solid #ccc;background:#fff;font-size:12px;min-height:36px}
 .map-ctrl label{display:flex;align-items:center;gap:3px;cursor:pointer;padding:4px 8px;border-radius:6px;background:#fff;border:1px solid #ddd;font-size:11px;min-height:32px}
 .map-ctrl input[type="checkbox"]{accent-color:var(--p);width:16px;height:16px}
-.route-btns{display:flex;gap:4px;margin-bottom:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.route-btns::-webkit-scrollbar{display:none}
+.route-btns-wrap{position:relative;margin-bottom:6px}
+.route-btns{display:flex;gap:4px;overflow-x:auto;padding:4px 0 8px;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:#1a3a6b #e0e0e0}
+.route-btns::-webkit-scrollbar{height:6px}
+.route-btns::-webkit-scrollbar-track{background:#e0e0e0;border-radius:3px}
+.route-btns::-webkit-scrollbar-thumb{background:#1a3a6b;border-radius:3px}
 .rt-btn{padding:5px 12px;border:2px solid #1a3a6b;border-radius:8px;background:#fff;color:#1a3a6b;cursor:pointer;font-size:11px;font-weight:700;white-space:nowrap;min-height:32px;display:inline-flex;align-items:center;gap:3px;transition:.12s;flex-shrink:0}
 .rt-btn:hover,.rt-btn:active{background:#f0f4ff}
 .rt-btn.on{background:#1a3a6b;color:#fff}
@@ -219,6 +222,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Ar
   .tips-h .tip{flex:0 0 230px}
   .route-btns{flex-wrap:nowrap}
   .rt-btn{padding:4px 8px;font-size:10px;min-height:28px}
+  .route-btns-wrap .scroll-arr{top:40%}
 }
 @media(max-width:380px){
   .cfg-grid{grid-template-columns:1fr}
@@ -368,9 +372,9 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
     <label><input type="checkbox" checked onchange="filterMap()" data-cat="transport"> ✈️</label>
     <button class="btn btn-sm btn-p" onclick="fitAll()">🔍 Fit All</button>
   </div>
-  <div class="route-btns" id="routeBtns">
+  <div class="route-btns-wrap"><div class="scroll-wrap"><button class="scroll-arr arr-l" onclick="scrollRow('routeBtns',-1)">◀</button><div class="route-btns" id="routeBtns">
     <button class="rt-btn on" onclick="filterRoute('all')">🚗 All Routes</button>
-  </div>
+  </div><button class="scroll-arr arr-r" onclick="scrollRow('routeBtns',1)">▶</button></div></div>
   <div class="map-wrap">
     <div id="map"></div>
     <div class="legend">
