@@ -123,6 +123,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Ar
 .map-ctrl select{padding:6px 8px;border-radius:6px;border:1px solid #ccc;background:#fff;font-size:12px;min-height:36px}
 .map-ctrl label{display:flex;align-items:center;gap:3px;cursor:pointer;padding:4px 8px;border-radius:6px;background:#fff;border:1px solid #ddd;font-size:11px;min-height:32px}
 .map-ctrl input[type="checkbox"]{accent-color:var(--p);width:16px;height:16px}
+.route-btns{display:flex;gap:4px;margin-bottom:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.route-btns::-webkit-scrollbar{display:none}
+.rt-btn{padding:5px 12px;border:2px solid #1a3a6b;border-radius:8px;background:#fff;color:#1a3a6b;cursor:pointer;font-size:11px;font-weight:700;white-space:nowrap;min-height:32px;display:inline-flex;align-items:center;gap:3px;transition:.12s;flex-shrink:0}
+.rt-btn:hover,.rt-btn:active{background:#f0f4ff}
+.rt-btn.on{background:#1a3a6b;color:#fff}
 .map-wrap{position:relative}
 .legend{position:absolute;bottom:10px;right:10px;background:#fff;padding:8px 10px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.15);z-index:500;font-size:11px}
 .leg-i{display:flex;align-items:center;gap:5px;margin-bottom:2px}
@@ -212,6 +217,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Ar
   .ov-btn{padding:6px 10px;font-size:11px;min-height:30px}
   .scroll-arr{width:28px;height:28px;font-size:12px}
   .tips-h .tip{flex:0 0 230px}
+  .route-btns{flex-wrap:nowrap}
+  .rt-btn{padding:4px 8px;font-size:10px;min-height:28px}
 }
 @media(max-width:380px){
   .cfg-grid{grid-template-columns:1fr}
@@ -222,6 +229,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Ar
 ::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
 .leaflet-popup-content{font-size:13px;line-height:1.4}
 .leaflet-popup-content .gm-link{margin-top:4px}
+.route-tooltip{background:#fff;color:#000;border:2px solid #1a3a6b;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;box-shadow:0 1px 6px rgba(0,0,0,.2);white-space:nowrap}
+.route-tooltip::before{border:none!important}
+.flight-tip{border-color:#e74c3c;color:#c0392b}
 /* ─── FOCUS VISIBLE ─── */
 .tab:focus-visible,.day-btn:focus-visible,.e-btn:focus-visible,.btn:focus-visible,.c-f:focus-visible,.c-add:focus-visible,.c-undo:focus-visible,.unskip:focus-visible,.add-btn:focus-visible,.cfg-apply:focus-visible,.pdf-btn:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
@@ -350,7 +360,6 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
 <div class="pn" id="pn-map">
   <div class="map-ctrl" id="mapCtrl">
     <select id="mapDay" onchange="filterMap()"><option value="all">All Days</option></select>
-    <select id="mapRoute" onchange="filterRoute()"><option value="all">🚗 All Routes</option></select>
     <label><input type="checkbox" checked onchange="filterMap()" data-cat="accommodation"> 🏨</label>
     <label><input type="checkbox" checked onchange="filterMap()" data-cat="poi"> 📍</label>
     <label><input type="checkbox" checked onchange="filterMap()" data-cat="dining"> 🍽️</label>
@@ -358,6 +367,9 @@ a:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
     <label><input type="checkbox" checked onchange="filterMap()" data-cat="snacks"> 🍡</label>
     <label><input type="checkbox" checked onchange="filterMap()" data-cat="transport"> ✈️</label>
     <button class="btn btn-sm btn-p" onclick="fitAll()">🔍 Fit All</button>
+  </div>
+  <div class="route-btns" id="routeBtns">
+    <button class="rt-btn on" onclick="filterRoute('all')">🚗 All Routes</button>
   </div>
   <div class="map-wrap">
     <div id="map"></div>
@@ -1299,13 +1311,12 @@ const ROUTE_COORDS={
 const DARK_BLUE='#1a3a6b';
 const SEG_COLORS=['#1a3a6b','#1e4d8c','#22609e','#2674b0','#2980b9','#3498db','#5dade2','#85c1e9'];
 
-let routeSegments=[]; // {day, layerGroup, fromLL, toLL}
+let routeSegments=[];
 
 async function fetchDrivingRoute(){
   routeLayer.clearLayers();
   routeSegments=[];
 
-  // Collect driving segments from TRIP data
   const segments=[];
   for(let i=0;i<TRIP.length;i++){
     const m=getMergedDay(i);
@@ -1319,7 +1330,6 @@ async function fetchDrivingRoute(){
     }
   }
 
-  // Draw each segment into its own layer group
   for(let si=0;si<segments.length;si++){
     const seg=segments[si];
     const segLayer=L.layerGroup().addTo(routeLayer);
@@ -1333,29 +1343,38 @@ async function fetchDrivingRoute(){
       <span style="font-size:11px;color:#555">${seg.nt}</span><br>
       <a class="gm-link" href="${gmLink}" target="_blank" rel="noopener noreferrer" style="margin-top:4px">📍 Google Maps Route</a>
     </div>`;
+    const tooltipText=`D${seg.day}: ${seg.from}→${seg.to} | ${seg.km} | ${seg.du}`;
 
     try{
       const resp=await fetch(`https://router.project-osrm.org/route/v1/driving/${fromLngLat};${toLngLat}?overview=full&geometries=geojson`);
       const data=await resp.json();
       if(data.routes?.[0]){
         const points=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
-        L.polyline(points,{color:DARK_BLUE,weight:5,opacity:.9}).bindPopup(popupHTML).addTo(segLayer);
-        const mid=points[Math.floor(points.length/2)];
-        L.marker(mid,{icon:L.divIcon({html:`<div style="background:#fff;color:#000;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,.25);border:2px solid #1a3a6b">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(segLayer);
+        L.polyline(points,{color:DARK_BLUE,weight:5,opacity:.9})
+          .bindPopup(popupHTML)
+          .bindTooltip(tooltipText,{permanent:true,direction:'center',className:'route-tooltip'})
+          .addTo(segLayer);
       } else throw new Error('No route');
     }catch(e){
-      L.polyline([seg.fromLL,seg.toLL],{color:DARK_BLUE,weight:4,opacity:.7,dashArray:'8,6'}).bindPopup(popupHTML).addTo(segLayer);
-      const mid=[(seg.fromLL[0]+seg.toLL[0])/2,(seg.fromLL[1]+seg.toLL[1])/2];
-      L.marker(mid,{icon:L.divIcon({html:`<div style="background:#fff;color:#000;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,.25);border:2px solid #1a3a6b">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(segLayer);
+      L.polyline([seg.fromLL,seg.toLL],{color:DARK_BLUE,weight:4,opacity:.7,dashArray:'8,6'})
+        .bindPopup(popupHTML)
+        .bindTooltip(tooltipText,{permanent:true,direction:'center',className:'route-tooltip'})
+        .addTo(segLayer);
     }
     routeSegments.push({day:seg.day,layer:segLayer,fromLL:seg.fromLL,toLL:seg.toLL,from:seg.from,to:seg.to,km:seg.km,du:seg.du});
   }
 
-  // Flight paths (in their own layer, always shown)
+  // Flight paths
   const flightLayer=L.layerGroup().addTo(routeLayer);
-  L.polyline([[35.5494,139.7798],[42.7752,141.6925]],{color:'#e74c3c',weight:2,opacity:.5,dashArray:'6,10'}).bindPopup('<b>✈️ Flight: Tokyo Haneda → New Chitose</b><br>~1.5 hours').addTo(flightLayer);
+  L.polyline([[35.5494,139.7798],[42.7752,141.6925]],{color:'#e74c3c',weight:2,opacity:.5,dashArray:'6,10'})
+    .bindPopup('<b>✈️ Tokyo Haneda → New Chitose</b><br>~1.5 hours')
+    .bindTooltip('✈️ HND→CTS ~1.5h',{permanent:true,direction:'center',className:'route-tooltip flight-tip'})
+    .addTo(flightLayer);
   if(TRIP.length>2){
-    L.polyline([[41.7700,140.8220],[35.5494,139.7798]],{color:'#e74c3c',weight:2,opacity:.5,dashArray:'6,10'}).bindPopup('<b>✈️ Return: Hakodate → Tokyo Haneda</b><br>~1.5 hours').addTo(flightLayer);
+    L.polyline([[41.7700,140.8220],[35.5494,139.7798]],{color:'#e74c3c',weight:2,opacity:.5,dashArray:'6,10'})
+      .bindPopup('<b>✈️ Hakodate → Tokyo Haneda</b><br>~1.5 hours')
+      .bindTooltip('✈️ HKD→HND ~1.5h',{permanent:true,direction:'center',className:'route-tooltip flight-tip'})
+      .addTo(flightLayer);
   }
   routeSegments.push({day:0,layer:flightLayer,from:'Flights',to:'',km:'',du:''});
 
@@ -1363,20 +1382,25 @@ async function fetchDrivingRoute(){
 }
 
 function populateRouteDayFilter(){
-  const s=document.getElementById('mapRoute');
-  if(!s)return;
-  s.innerHTML='<option value="all">🚗 All Routes</option>';
+  const el=document.getElementById('routeBtns');
+  if(!el)return;
+  let html=`<button class="rt-btn on" onclick="filterRoute('all')">🚗 All Routes</button>`;
   routeSegments.forEach(seg=>{
-    if(seg.day===0)return; // skip flight entry
-    s.innerHTML+=`<option value="${seg.day}">D${seg.day}: ${seg.from}→${seg.to} (${seg.km})</option>`;
+    if(seg.day===0)return;
+    html+=`<button class="rt-btn" onclick="filterRoute('${seg.day}')">D${seg.day}: ${seg.from}→${seg.to} <span style="font-size:10px;opacity:.7">${seg.km} · ${seg.du}</span></button>`;
   });
+  el.innerHTML=html;
 }
 
-function filterRoute(){
-  const v=document.getElementById('mapRoute')?.value||'all';
+function filterRoute(v){
+  if(typeof v==='undefined')v='all';
+  // Update button active state
+  document.querySelectorAll('.rt-btn').forEach(b=>{
+    const bVal=b.onclick?.toString().match(/filterRoute\('([^']+)'\)/)?.[1]||'';
+    b.classList.toggle('on',bVal===String(v));
+  });
   routeSegments.forEach(seg=>{
     if(seg.day===0){
-      // Flights always visible
       if(!routeLayer.hasLayer(seg.layer))routeLayer.addLayer(seg.layer);
       return;
     }
@@ -1390,7 +1414,6 @@ function filterRoute(){
       }
     }
   });
-  // Zoom to selected route segment
   if(v!=='all'){
     const seg=routeSegments.find(s=>s.day===+v);
     if(seg&&seg.fromLL&&seg.toLL){
