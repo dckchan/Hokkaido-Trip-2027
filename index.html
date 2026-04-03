@@ -1297,12 +1297,12 @@ async function fetchDrivingRoute(){
         const points=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
         L.polyline(points,{color:DARK_BLUE,weight:5,opacity:.9}).bindPopup(popupHTML).addTo(segLayer);
         const mid=points[Math.floor(points.length/2)];
-        L.marker(mid,{icon:L.divIcon({html:`<div style="background:${DARK_BLUE};color:#fff;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);border:2px solid #fff">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(segLayer);
+        L.marker(mid,{icon:L.divIcon({html:`<div style="background:#fff;color:#000;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,.25);border:2px solid #1a3a6b">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(segLayer);
       } else throw new Error('No route');
     }catch(e){
       L.polyline([seg.fromLL,seg.toLL],{color:DARK_BLUE,weight:4,opacity:.7,dashArray:'8,6'}).bindPopup(popupHTML).addTo(segLayer);
       const mid=[(seg.fromLL[0]+seg.toLL[0])/2,(seg.fromLL[1]+seg.toLL[1])/2];
-      L.marker(mid,{icon:L.divIcon({html:`<div style="background:${DARK_BLUE};color:#fff;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);border:2px solid #fff">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(segLayer);
+      L.marker(mid,{icon:L.divIcon({html:`<div style="background:#fff;color:#000;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,.25);border:2px solid #1a3a6b">D${seg.day} · ${seg.km} · ${seg.du}</div>`,className:'',iconAnchor:[50,12]})}).bindPopup(popupHTML).addTo(segLayer);
     }
     routeSegments.push({day:seg.day,layer:segLayer,fromLL:seg.fromLL,toLL:seg.toLL,from:seg.from,to:seg.to,km:seg.km,du:seg.du});
   }
