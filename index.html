@@ -967,24 +967,49 @@ function renderDay(idx){
   });
   dayStops.sort((a,b)=>parseTime(a.time)-parseTime(b.time));
 
-  // Build daily route Google Maps link: all stops in order, ending at accommodation
-  const routePoints=[];
-  if(m.dr)routePoints.push(m.dr.f+', Hokkaido, Japan');
-  dayStops.forEach(st=>{
-    if(st.address)routePoints.push(st.address);
-    else if(st.lat&&st.lng)routePoints.push(st.lat+','+st.lng);
-  });
-  if(m.acc&&!m.acc._skipped){
-    if(m.acc.address)routePoints.push(m.acc.address);
-    else if(m.acc.lat&&m.acc.lng)routePoints.push(m.acc.lat+','+m.acc.lng);
+  // Build daily route Google Maps link
+  // Resolve a location string from an item (address or lat,lng)
+  function locStr(item){
+    if(item.address&&item.address.length>3)return item.address;
+    if(item.a&&item.a.length>3)return item.a;
+    if(item.lat&&item.lng)return item.lat+','+item.lng;
+    return '';
   }
 
-  // Daily route card with Google Maps multi-stop link
-  if(routePoints.length>=2){
-    const origin=encodeURIComponent(routePoints[0]);
-    const dest=encodeURIComponent(routePoints[routePoints.length-1]);
-    const waypoints=routePoints.slice(1,-1).map(p=>encodeURIComponent(p)).join('|');
-    const dailyRouteLink=`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}${waypoints?'&waypoints='+waypoints:''}`;
+  // Determine origin: driving start, or accommodation, or first stop, or location name
+  let routeOrigin='';
+  if(m.dr)routeOrigin=m.dr.f+', Hokkaido, Japan';
+  else if(m.acc&&!m.acc._skipped)routeOrigin=locStr(m.acc)||m.acc.name+', Hokkaido, Japan';
+  else if(dayStops.length)routeOrigin=locStr(dayStops[0])||m.lo+', Hokkaido, Japan';
+  else routeOrigin=m.lo+', Hokkaido, Japan';
+
+  // Determine destination: accommodation (end of day) or last stop or driving destination
+  let routeDest='';
+  if(m.acc&&!m.acc._skipped)routeDest=locStr(m.acc)||m.acc.name+', Hokkaido, Japan';
+  else if(dayStops.length)routeDest=locStr(dayStops[dayStops.length-1])||m.lo+', Hokkaido, Japan';
+  else if(m.dr)routeDest=m.dr.t+', Hokkaido, Japan';
+  else routeDest=m.lo+', Hokkaido, Japan';
+
+  // Build waypoints from stops (Google Maps supports max ~9 waypoints)
+  const waypointStops=dayStops.filter(st=>locStr(st)&&locStr(st)!==routeOrigin&&locStr(st)!==routeDest);
+  const maxWP=Math.min(waypointStops.length,9);
+  // If too many stops, sample evenly
+  let selectedWP=[];
+  if(waypointStops.length<=9){
+    selectedWP=waypointStops;
+  } else {
+    for(let wi=0;wi<9;wi++){
+      selectedWP.push(waypointStops[Math.floor(wi*waypointStops.length/9)]);
+    }
+  }
+  const wpStr=selectedWP.map(st=>encodeURIComponent(locStr(st))).join('%7C');
+
+  // Build the link — always generate if we have origin and dest
+  const hasDayRoute=routeOrigin&&routeDest&&routeOrigin!==routeDest;
+  const dailyRouteLink=hasDayRoute?`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(routeOrigin)}&destination=${encodeURIComponent(routeDest)}&travelmode=driving${wpStr?'&waypoints='+wpStr:''}`:'';
+
+  // Daily route card
+  if(dayStops.length>0||hasDayRoute){
     h+=`<div class="sec" style="background:linear-gradient(135deg,#f0f4ff,#e8eeff);border-left:4px solid #1a3a6b;margin-bottom:10px">
       <h3 style="color:#1a3a6b;margin-bottom:4px">📍 Day ${m.day} Route — ${dayStops.length} stops${m.acc&&!m.acc._skipped?' → 🏨 '+m.acc.name:''}</h3>
       <div style="display:flex;flex-wrap:wrap;gap:4px;margin:4px 0;font-size:11px;align-items:center">`;
@@ -996,7 +1021,11 @@ function renderDay(idx){
     if(m.acc&&!m.acc._skipped){
       h+=`<span style="background:#1a3a6b;color:#fff;padding:2px 8px;border-radius:12px;white-space:nowrap;font-weight:700">${stopNum}. 🏨 ${m.acc.name}</span>`;
     }
-    h+=`</div><a class="gm-link" href="${dailyRouteLink}" target="_blank" rel="noopener noreferrer" style="margin-top:4px">🗺️ Open Full Day Route in Google Maps</a></div>`;
+    h+=`</div>`;
+    if(dailyRouteLink){
+      h+=`<a class="gm-link" href="${dailyRouteLink}" target="_blank" rel="noopener noreferrer" style="margin-top:4px">🗺️ Open Full Day Route in Google Maps</a>`;
+    }
+    h+=`</div>`;
   }
 
   // Sections: POI, Dining, Activities, Snacks (in standard order)
